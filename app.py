@@ -52,24 +52,25 @@ HTML_TEMPLATE = """
             margin-bottom: 20px;
         }
         .header h1 {
-            font-size: 24px;
+            font-size: 26px;
             color: #38bdf8;
             margin-bottom: 5px;
-            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
+            letter-spacing: 1px;
         }
         .header p {
             font-size: 14px;
             color: #94a3b8;
         }
-        /* إطار وجه الروبوت المتكلم */
+        /* إطار وجه الروبوت المتكلم الساطع */
         .robot-face-box {
             position: relative;
-            width: 260px;
-            height: 260px;
+            width: 280px;
+            height: 280px;
             border-radius: 50%;
             background: linear-gradient(145deg, #0f172a, #1e293b);
             border: 3px solid #38bdf8;
-            box-shadow: 0 0 30px rgba(56, 189, 248, 0.4), inset 0 0 20px rgba(56, 189, 248, 0.2);
+            box-shadow: 0 0 40px rgba(56, 189, 248, 0.5), inset 0 0 25px rgba(56, 189, 248, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -77,20 +78,20 @@ HTML_TEMPLATE = """
             overflow: hidden;
         }
         .robot-face-box img {
-            width: 90%;
-            height: 90%;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             border-radius: 50%;
             animation: pulseGlow 3s infinite alternate;
         }
         @keyframes pulseGlow {
-            0% { transform: scale(1); filter: drop-shadow(0 0 5px #38bdf8); }
-            100% { transform: scale(1.03); filter: drop-shadow(0 0 15px #38bdf8); }
+            0% { transform: scale(1); filter: drop-shadow(0 0 8px #38bdf8); }
+            100% { transform: scale(1.02); filter: drop-shadow(0 0 20px #38bdf8); }
         }
         .status-badge {
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.85);
             border: 1px solid #38bdf8;
-            padding: 8px 16px;
+            padding: 8px 18px;
             border-radius: 20px;
             font-size: 13px;
             color: #38bdf8;
@@ -98,29 +99,30 @@ HTML_TEMPLATE = """
             display: flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
         }
         .status-dot {
             width: 8px;
             height: 8px;
             background-color: #22c55e;
             border-radius: 50%;
-            box-shadow: 0 0 8px #22c55e;
+            box-shadow: 0 0 10px #22c55e;
         }
         /* نافذة المحادثة التفاعلية */
         .chat-box {
             width: 100%;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(56, 189, 248, 0.3);
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(56, 189, 248, 0.4);
             border-radius: 16px;
             padding: 15px;
-            min-height: 120px;
-            max-height: 180px;
+            min-height: 110px;
+            max-height: 170px;
             overflow-y: auto;
             margin-bottom: 20px;
             text-align: right;
             font-size: 14px;
             line-height: 1.6;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
         }
         .chat-message {
             margin-bottom: 10px;
@@ -128,6 +130,7 @@ HTML_TEMPLATE = """
         }
         .chat-message.bot {
             color: #38bdf8;
+            font-weight: 500;
         }
         /* زر التحدث الرئيسي */
         .talk-btn {
@@ -135,12 +138,12 @@ HTML_TEMPLATE = """
             background: linear-gradient(135deg, #0284c7, #0369a1);
             color: white;
             border: none;
-            padding: 15px;
+            padding: 16px;
             border-radius: 30px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+            box-shadow: 0 4px 20px rgba(2, 132, 199, 0.5);
             transition: 0.3s;
             display: flex;
             align-items: center;
@@ -149,7 +152,8 @@ HTML_TEMPLATE = """
         }
         .talk-btn:hover {
             background: linear-gradient(135deg, #0369a1, #075985);
-            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.6);
+            box-shadow: 0 6px 25px rgba(2, 132, 199, 0.7);
+            transform: translateY(-2px);
         }
         .footer-note {
             margin-top: 15px;
@@ -166,7 +170,7 @@ HTML_TEMPLATE = """
         </div>
 
         <div class="robot-face-box">
-            <!-- وجه الروبوتية المتكلمة الحقيقية المتطابق مع التصميم -->
+            <!-- وجه الروبوتية المتكلمة الحقيقية (قم برفع صورة وجه الروبوت إلى مستودعك واستبدل الرابط أدناه باسم الصورة مثل /robot-face.jpg) -->
             <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop" alt="C Robot AI Face">
         </div>
 
@@ -190,7 +194,7 @@ HTML_TEMPLATE = """
 
     <script>
         function startInitializing() {
-            console.log("C ROBOT AI Interface Initialized.");
+            console.log("C ROBOT AI Interface Initialized on Port 7000.");
         }
         window.onload = startInitializing;
 
@@ -216,7 +220,6 @@ def home():
 def chat():
     data = request.json
     user_message = data.get('message', '')
-    # استجابة تجريبية ذكية متوافقة
     response_text = f"مرحباً! لقد تلقيت رسالتك: '{user_message}'. أنا جاهز للرد بالصوت والصورة الحية."
     return jsonify({"response": response_text})
 

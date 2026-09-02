@@ -1,9 +1,8 @@
-# إيقاف إجباري لأي خادم قديم يعمل على نفس المنفذ لضمان عدم التداخل
 import os
 import signal
 import subprocess
 
-PORT = 9000
+PORT = 7000
 
 try:
     command = f"lsof -t -i:{PORT}"
@@ -44,7 +43,6 @@ HTML_TEMPLATE = """
             flex-direction: column;
             gap: 12px;
         }
-        /* الهيدر العلوي */
         .top-header {
             display: flex;
             justify-content: space-between;
@@ -75,7 +73,6 @@ HTML_TEMPLATE = """
         }
         .l-btn.active { background: #0284c7; color: white; font-weight: bold; box-shadow: 0 0 8px #0284c7; }
 
-        /* منطقة عرض الروبوت الأساسية */
         .robot-main-card {
             position: relative;
             background: rgba(10, 15, 30, 0.9);
@@ -90,7 +87,6 @@ HTML_TEMPLATE = """
             box-shadow: 0 0 30px rgba(56, 189, 248, 0.8), inset 0 0 20px rgba(56, 189, 248, 0.5);
             overflow: hidden; margin-bottom: 10px; background: #000;
         }
-        /* صورة وجه الروبوت الحقيقي المطابقة للصورة الإعلانية */
         .robot-avatar-wrapper img { width: 100%; height: 100%; object-fit: cover; }
 
         .status-badge {
@@ -160,7 +156,6 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <div class="app-container">
-        <!-- الهيدر -->
         <div class="top-header">
             <div class="brand-box">
                 <div class="brand-logo">C</div>
@@ -175,10 +170,8 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- قسم التفاعل الرئيسي مع وجه الروبوت الحقيقي -->
         <div class="robot-main-card">
             <div class="robot-avatar-wrapper">
-                <!-- صورة وجه الروبوت الذكي المتكلم بدقة عالية وتصميم مطابق -->
                 <img src="https://images.unsplash.com/photo-1614680376593-902f749f7ffc?q=80&w=500&auto=format&fit=crop" alt="C Robot Real Talking Face">
             </div>
 
@@ -191,7 +184,6 @@ HTML_TEMPLATE = """
                 <div class="msg-b" id="welcomeMsg">🤖 مرحباً، أنا C ROBOT AI روبوت ذكي متكلم حقيقي، كيف يمكنني مساعدتك اليوم؟</div>
             </div>
 
-            <!-- موجات الصوت -->
             <div class="sound-wave">
                 <div class="bar" style="height: 10px;"></div>
                 <div class="bar" style="height: 16px;"></div>
@@ -206,7 +198,6 @@ HTML_TEMPLATE = """
             </button>
         </div>
 
-        <!-- مؤشرات العين والفم -->
         <div class="features-row">
             <div class="feature-box-v3">
                 <div class="box-title"><span id="lblEye">تتبع العين</span><span>Eye</span></div>
@@ -220,14 +211,12 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- قائمة الخصائص الذكية الجانبية -->
         <div class="capabilities-list" id="capList">
             <div class="capability-item">🌐 يتحدث العربية والإنجليزية بطلاقة</div>
             <div class="capability-item">🧠 فهم الأسئلة المعقدة بدقة متناهية</div>
             <div class="capability-item">⚡ إجابات فورية وتفاعل بصوت وصورة</div>
         </div>
 
-        <!-- شبكة الأزرار السفلية الستة -->
         <div class="bottom-nav-grid">
             <div class="nav-card" onclick="runAction('chat')">
                 <div class="nav-icon">💬</div>
@@ -367,4 +356,5 @@ def home():
     return render_template_string(HTML_TEMPLATE)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=PORT, debug=True)
+    port = int(os.environ.get('PORT', PORT))
+    app.run(host='0.0.0.0', port=port, debug=True)

@@ -14,13 +14,13 @@ try:
 except Exception:
     pass
 
-from flask import Flask, render_template_string, request, jsonify
+from flask import Flask, render_template_string
 
 app = Flask(__name__)
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="htmlRoot">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -44,6 +44,7 @@ HTML_TEMPLATE = """
             flex-direction: column;
             gap: 12px;
         }
+        /* الهيدر العلوي */
         .top-header {
             display: flex;
             justify-content: space-between;
@@ -74,6 +75,7 @@ HTML_TEMPLATE = """
         }
         .l-btn.active { background: #0284c7; color: white; font-weight: bold; box-shadow: 0 0 8px #0284c7; }
 
+        /* منطقة عرض الروبوت الأساسية */
         .robot-main-card {
             position: relative;
             background: rgba(10, 15, 30, 0.9);
@@ -88,6 +90,7 @@ HTML_TEMPLATE = """
             box-shadow: 0 0 30px rgba(56, 189, 248, 0.8), inset 0 0 20px rgba(56, 189, 248, 0.5);
             overflow: hidden; margin-bottom: 10px; background: #000;
         }
+        /* صورة وجه الروبوت الحقيقي المطابقة للصورة الإعلانية */
         .robot-avatar-wrapper img { width: 100%; height: 100%; object-fit: cover; }
 
         .status-badge {
@@ -162,25 +165,26 @@ HTML_TEMPLATE = """
             <div class="brand-box">
                 <div class="brand-logo">C</div>
                 <div class="brand-titles">
-                    <h1>C ROBOT AI</h1>
-                    <p>الروبوت الذكي المتكلم</p>
+                    <h1 id="txtTitle">C ROBOT AI</h1>
+                    <p id="txtSub">الروبوت الذكي المتكلم</p>
                 </div>
             </div>
             <div class="lang-switch">
-                <button class="l-btn active" onclick="setLang('ar')">العربية</button>
-                <button class="l-btn" onclick="setLang('en')">English</button>
+                <button class="l-btn active" id="btnAr" onclick="changeLanguage('ar')">العربية</button>
+                <button class="l-btn" id="btnEn" onclick="changeLanguage('en')">English</button>
             </div>
         </div>
 
-        <!-- قسم التفاعل الرئيسي -->
+        <!-- قسم التفاعل الرئيسي مع وجه الروبوت الحقيقي -->
         <div class="robot-main-card">
             <div class="robot-avatar-wrapper">
-                <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop" alt="C Robot Face">
+                <!-- صورة وجه الروبوت الذكي المتكلم بدقة عالية وتصميم مطابق -->
+                <img src="https://images.unsplash.com/photo-1614680376593-902f749f7ffc?q=80&w=500&auto=format&fit=crop" alt="C Robot Real Talking Face">
             </div>
 
             <div class="status-badge">
                 <div class="dot"></div>
-                <span>Online & Ready - متصل وجاهز (Audio Active)</span>
+                <span id="txtStatus">Online & Ready - متصل وجاهز</span>
             </div>
 
             <div class="chat-panel" id="chatBox">
@@ -197,27 +201,27 @@ HTML_TEMPLATE = """
                 <div class="bar" style="height: 15px;"></div>
             </div>
 
-            <button class="talk-action-btn" onclick="speakText('مرحباً بك، أنا جاهز للتحدث معك الآن وتلبية طلباتك بكل ذكاء وسرعة!')">
-                🎙️ تحدث مع C ROBOT AI (صوت حقيقي)
+            <button class="talk-action-btn" id="talkBtn" onclick="triggerTalk()">
+                🎙️ تحدث مع C ROBOT AI
             </button>
         </div>
 
         <!-- مؤشرات العين والفم -->
         <div class="features-row">
             <div class="feature-box-v3">
-                <div class="box-title"><span>تتبع العين</span><span>Eye</span></div>
+                <div class="box-title"><span id="lblEye">تتبع العين</span><span>Eye</span></div>
                 <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=300&auto=format&fit=crop" class="sub-preview" alt="Eye Tracking">
-                <div class="active-status-text"><span class="dot"></span> نشط Active</div>
+                <div class="active-status-text" id="lblEyeActive"><span class="dot"></span> نشط Active</div>
             </div>
             <div class="feature-box-v3">
-                <div class="box-title"><span>تحريك الفم</span><span>Mouth</span></div>
+                <div class="box-title"><span id="lblMouth">تحريك الفم</span><span>Mouth</span></div>
                 <img src="https://images.unsplash.com/photo-1509967419530-da38b4704bc6?q=80&w=300&auto=format&fit=crop" class="sub-preview" alt="Mouth Animation">
-                <div class="active-status-text"><span class="dot"></span> نشط Active</div>
+                <div class="active-status-text" id="lblMouthActive"><span class="dot"></span> نشط Active</div>
             </div>
         </div>
 
         <!-- قائمة الخصائص الذكية الجانبية -->
-        <div class="capabilities-list">
+        <div class="capabilities-list" id="capList">
             <div class="capability-item">🌐 يتحدث العربية والإنجليزية بطلاقة</div>
             <div class="capability-item">🧠 فهم الأسئلة المعقدة بدقة متناهية</div>
             <div class="capability-item">⚡ إجابات فورية وتفاعل بصوت وصورة</div>
@@ -225,33 +229,33 @@ HTML_TEMPLATE = """
 
         <!-- شبكة الأزرار السفلية الستة -->
         <div class="bottom-nav-grid">
-            <div class="nav-card" onclick="speakText('تم تفعيل المحادثة الذكية بنجاح، أنا جاهز لاستقبال أسئلتك.')">
+            <div class="nav-card" onclick="runAction('chat')">
                 <div class="nav-icon">💬</div>
-                <div class="nav-text">محادثة ذكية</div>
+                <div class="nav-text" id="nav1">محادثة ذكية</div>
             </div>
-            <div class="nav-card" onclick="speakText('الترجمة الفورية نشطة، اكتب جملتك للترجمة.')">
+            <div class="nav-card" onclick="runAction('translate')">
                 <div class="nav-icon">🌐</div>
-                <div class="nav-text">ترجمة فورية</div>
+                <div class="nav-text" id="nav2">ترجمة فورية</div>
             </div>
-            <div class="nav-card" onclick="speakText('مرحباً بك، أنا مساعدك الشخصي الذكي.')">
+            <div class="nav-card" onclick="runAction('assistant')">
                 <div class="nav-icon">👤</div>
-                <div class="nav-text">مساعد شخصي</div>
+                <div class="nav-text" id="nav3">مساعد شخصي</div>
             </div>
-            <div class="nav-card" onclick="speakText('البحث الذكي جاهز، ما الذي تبحث عنه اليوم؟')">
+            <div class="nav-card" onclick="runAction('search')">
                 <div class="nav-icon">🔍</div>
-                <div class="nav-text">بحث ذكي</div>
+                <div class="nav-text" id="nav4">بحث ذكي</div>
             </div>
-            <div class="nav-card" onclick="speakText('قسم المعلومات العامة جاهز للإجابة عن أسئلتك.')">
+            <div class="nav-card" onclick="runAction('knowledge')">
                 <div class="nav-icon">📖</div>
-                <div class="nav-text">معلومات عامة</div>
+                <div class="nav-text" id="nav5">معلومات عامة</div>
             </div>
-            <div class="nav-card" onclick="speakText('تم فتح لوحة الإعدادات الخاصة بالتطبيق.')">
+            <div class="nav-card" onclick="runAction('settings')">
                 <div class="nav-icon">⚙️</div>
-                <div class="nav-text">إعدادات</div>
+                <div class="nav-text" id="nav6">إعدادات</div>
             </div>
         </div>
 
-        <div class="footer-note">
+        <div class="footer-note" id="footerText">
             C ROBOT AI V3 – الذكاء الاصطناعي في خدمتك
         </div>
     </div>
@@ -259,33 +263,99 @@ HTML_TEMPLATE = """
     <script>
         let currentLang = 'ar';
 
-        function speakText(text) {
+        const translations = {
+            ar: {
+                sub: "الروبوت الذكي المتكلم",
+                status: "Online & Ready - متصل وجاهز",
+                welcome: "🤖 مرحباً، أنا C ROBOT AI روبوت ذكي متكلم حقيقي، كيف يمكنني مساعدتك اليوم؟",
+                talkBtn: "🎙️ تحدث مع C ROBOT AI",
+                eye: "تتبع العين",
+                mouth: "تحريك الفم",
+                active: "نشط Active",
+                caps: [
+                    "🌐 يتحدث العربية والإنجليزية بطلاقة",
+                    "🧠 فهم الأسئلة المعقدة بدقة متناهية",
+                    "⚡ إجابات فورية وتفاعل بصوت وصورة"
+                ],
+                navs: ["محادثة ذكية", "ترجمة فورية", "مساعد شخصي", "بحث ذكي", "معلومات عامة", "إعدادات"],
+                footer: "C ROBOT AI V3 – الذكاء الاصطناعي في خدمتك",
+                speechWelcome: "مرحباً بك، أنا C ROBOT AI جاهز للتحدث معك الآن."
+            },
+            en: {
+                sub: "The Real Talking AI Robot",
+                status: "Online & Ready - Connected",
+                welcome: "🤖 Hello, I'm C ROBOT AI a real talking AI robot. How can I help you today?",
+                talkBtn: "🎙️ Talk with C ROBOT AI",
+                eye: "Eye Tracking",
+                mouth: "Mouth Animation",
+                active: "Active",
+                caps: [
+                    "🌐 Speaks Arabic and English fluently",
+                    "🧠 Understands complex questions precisely",
+                    "⚡ Instant responses with voice & vision"
+                ],
+                navs: ["Smart Chat", "Translate", "Assistant", "Smart Search", "Knowledge", "Settings"],
+                footer: "C ROBOT AI V3 – AI at your service",
+                speechWelcome: "Hello, I am C ROBOT AI, ready to talk with you now."
+            }
+        };
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const root = document.getElementById('htmlRoot');
+            root.setAttribute('lang', lang);
+            root.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+
+            document.getElementById('btnAr').classList.toggle('active', lang === 'ar');
+            document.getElementById('btnEn').classList.toggle('active', lang === 'en');
+
+            const t = translations[lang];
+            document.getElementById('txtSub').innerText = t.sub;
+            document.getElementById('txtStatus').innerText = t.status;
+            document.getElementById('welcomeMsg').innerText = t.welcome;
+            document.getElementById('talkBtn').innerText = t.talkBtn;
+            document.getElementById('lblEye').innerText = t.eye;
+            document.getElementById('lblMouth').innerText = t.mouth;
+            
+            document.getElementById('lblEyeActive').innerHTML = `<span class="dot"></span> ${t.active}`;
+            document.getElementById('lblMouthActive').innerHTML = `<span class="dot"></span> ${t.active}`;
+
+            const capItems = document.querySelectorAll('.capability-item');
+            capItems.forEach((item, idx) => { item.innerText = t.caps[idx]; });
+
+            for(let i = 1; i <= 6; i++) {
+                document.getElementById('nav' + i).innerText = t.navs[i-1];
+            }
+            document.getElementById('footerText').innerText = t.footer;
+
+            speak(t.speechWelcome);
+        }
+
+        function speak(text) {
             const chatBox = document.getElementById('chatBox');
-            chatBox.innerHTML += `<div class="msg-u">👤 تفاعل النظام</div><div class="msg-b">🤖 ${text}</div>`;
+            chatBox.innerHTML += `<div class="msg-b">🤖 ${text}</div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // تشغيل محرك الصوت الحقيقي في المتصفح
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // إيقاف أي صوت سابق
+                window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = currentLang === 'ar' ? 'ar-SA' : 'en-US';
                 utterance.rate = 1.0;
-                utterance.pitch = 1.0;
                 window.speechSynthesis.speak(utterance);
             }
         }
 
-        function setLang(lang) {
-            currentLang = lang;
-            const buttons = document.querySelectorAll('.l-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            if(lang === 'ar') {
-                speakText('تم تغيير اللغة إلى العربية بنجاح.');
-            } else {
-                speakText('Language changed to English successfully.');
-            }
+        function triggerTalk() {
+            const msg = currentLang === 'ar' ? "أنا أستمع إليك الآن، تفضل بطرح سؤالك." : "I am listening to you now, please ask your question.";
+            speak(msg);
+        }
+
+        function runAction(action) {
+            const responses = {
+                ar: { chat: "تم تفعيل محادثة ذكية.", translate: "ترجمة فورية نشطة.", assistant: "مساعدك الشخصي جاهز.", search: "بحث ذكي نشط.", knowledge: "قسم المعلومات العامة مفتوح.", settings: "لوحة الإعدادات نشطة." },
+                en: { chat: "Smart chat activated.", translate: "Instant translation active.", assistant: "Personal assistant ready.", search: "Smart search active.", knowledge: "Knowledge base open.", settings: "Settings panel active." }
+            };
+            speak(responses[currentLang][action]);
         }
     </script>
 </body>

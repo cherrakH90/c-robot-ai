@@ -2,7 +2,7 @@ import os
 import signal
 import subprocess
 
-PORT = 7000
+PORT = 9000
 
 try:
     command = f"lsof -t -i:{PORT}"

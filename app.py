@@ -18,14 +18,14 @@ from flask import Flask, render_template_string, request, jsonify
 
 app = Flask(__name__)
 
-# كود HTML و CSS الشامل والمطابق لتصميم C ROBOT AI بنسبة 100%
+# كود HTML و CSS لنسخة V3 بتصميم مطابق 100% للصورة الإعلانية الاحترافية
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C ROBOT AI - الروبوت الذكي المتكلم</title>
+    <title>C ROBOT AI - الروبوت الذكي المتكلم V3</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body {
@@ -35,61 +35,63 @@ HTML_TEMPLATE = """
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
-            background-image: radial-gradient(circle at center, #0f172a 0%, #030712 100%);
-            padding: 15px;
+            background: radial-gradient(circle at center, #0b1329 0%, #030712 100%);
+            padding: 12px;
         }
-        .main-container {
+        .app-container {
             width: 100%;
-            max-width: 440px;
+            max-width: 460px;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            gap: 12px;
         }
-        /* الهيدر العلوي */
-        .app-header {
+
+        /* 1. الهيدر العلوي */
+        .top-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
-            margin-bottom: 15px;
-            padding: 0 5px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 16px;
+            padding: 10px 14px;
         }
-        .logo-area {
+        .brand-box {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        .logo-badge {
-            background: linear-gradient(135deg, #0284c7, #0369a1);
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+        .brand-logo {
+            background: linear-gradient(135deg, #0284c7, #38bdf8);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             color: white;
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
         }
-        .title-text h1 {
-            font-size: 18px;
+        .brand-titles h1 {
+            font-size: 16px;
             color: #ffffff;
             font-weight: bold;
+            letter-spacing: 0.5px;
         }
-        .title-text p {
-            font-size: 11px;
+        .brand-titles p {
+            font-size: 10px;
             color: #38bdf8;
         }
-        .lang-switcher {
+        .lang-switch {
             display: flex;
-            background: #0f172a;
+            background: #090d16;
             border: 1px solid #0284c7;
             border-radius: 20px;
-            padding: 3px;
+            padding: 2px;
         }
-        .lang-btn {
+        .l-btn {
             background: transparent;
             border: none;
             color: #94a3b8;
@@ -98,82 +100,114 @@ HTML_TEMPLATE = """
             border-radius: 15px;
             cursor: pointer;
         }
-        .lang-btn.active {
+        .l-btn.active {
             background: #0284c7;
             color: white;
+            font-weight: bold;
         }
 
-        /* حاوية الروبوت الرئيسية */
-        .robot-showcase {
+        /* 2. منطقة عرض الروبوت والتشغيل */
+        .robot-main-card {
             position: relative;
-            width: 100%;
-            background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(3, 7, 18, 0.9) 100%);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 20px;
-            padding: 20px;
+            background: rgba(10, 15, 30, 0.85);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 22px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 0 25px rgba(2, 132, 199, 0.2);
-            margin-bottom: 15px;
+            box-shadow: 0 0 30px rgba(2, 132, 199, 0.25);
         }
 
-        .robot-circle-img {
-            width: 180px;
-            height: 180px;
+        /* حاوية الهاتف المصغرة والوجه بداخلها */
+        .robot-avatar-wrapper {
+            position: relative;
+            width: 170px;
+            height: 170px;
             border-radius: 50%;
             border: 3px solid #38bdf8;
-            box-shadow: 0 0 25px rgba(56, 189, 248, 0.6);
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.7), inset 0 0 15px rgba(56, 189, 248, 0.4);
+            overflow: hidden;
+            margin-bottom: 10px;
+            background: #000;
+        }
+        .robot-avatar-wrapper img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            margin-bottom: 12px;
         }
 
-        .status-pill {
-            background: rgba(15, 23, 42, 0.9);
+        /* شارة الحالة */
+        .status-badge {
+            background: rgba(15, 23, 42, 0.95);
             border: 1px solid #22c55e;
-            padding: 5px 15px;
+            padding: 4px 14px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             color: #22c55e;
             display: flex;
             align-items: center;
             gap: 6px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
-        .status-dot-green {
-            width: 7px;
-            height: 7px;
+        .dot {
+            width: 6px;
+            height: 6px;
             background-color: #22c55e;
             border-radius: 50%;
-            box-shadow: 0 0 8px #22c55e;
+            box-shadow: 0 0 6px #22c55e;
         }
 
-        /* صندوق المحادثة داخل الشاشة */
-        .chat-display {
+        /* صندوق المحادثة والتفاعل */
+        .chat-panel {
             width: 100%;
-            background: rgba(3, 7, 18, 0.7);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 14px;
-            padding: 12px;
-            min-height: 90px;
-            max-height: 130px;
+            background: rgba(3, 7, 18, 0.8);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 12px;
+            padding: 10px;
+            min-height: 80px;
+            max-height: 110px;
             overflow-y: auto;
             text-align: right;
-            font-size: 13px;
-            margin-bottom: 12px;
+            font-size: 12px;
+            margin-bottom: 10px;
         }
-        .msg-user { color: #e2e8f0; margin-bottom: 6px; }
-        .msg-bot { color: #38bdf8; font-weight: 500; }
+        .msg-u { color: #cbd5e1; margin-bottom: 4px; }
+        .msg-b { color: #38bdf8; font-weight: 500; }
 
-        /* زر التحدث الرئيسي البارز */
-        .main-action-btn {
+        /* موجات الصوت التفاعلية */
+        .sound-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 20px;
+            margin-bottom: 10px;
+        }
+        .bar {
+            width: 3px;
+            background: #38bdf8;
+            border-radius: 3px;
+            animation: pulseWave 1.2s infinite ease-in-out;
+        }
+        .bar:nth-child(2) { animation-delay: 0.1s; }
+        .bar:nth-child(3) { animation-delay: 0.2s; }
+        .bar:nth-child(4) { animation-delay: 0.3s; }
+        .bar:nth-child(5) { animation-delay: 0.4s; }
+        .bar:nth-child(6) { animation-delay: 0.5s; }
+        @keyframes pulseWave {
+            0%, 100% { height: 6px; opacity: 0.5; }
+            50% { height: 18px; opacity: 1; }
+        }
+
+        /* زر التحدث الرئيسي */
+        .talk-action-btn {
             width: 100%;
             background: linear-gradient(135deg, #0284c7, #0369a1);
             color: white;
             border: none;
-            padding: 14px;
+            padding: 12px;
             border-radius: 25px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(2, 132, 199, 0.5);
@@ -181,25 +215,79 @@ HTML_TEMPLATE = """
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: 0.3s;
+            transition: 0.2s;
         }
-        .main-action-btn:hover {
+        .talk-action-btn:hover {
             background: linear-gradient(135deg, #0369a1, #075985);
         }
 
-        /* شبكة الأزرار الستة السفلية المطابقة للصورة */
-        .features-grid {
-            width: 100%;
+        /* 3. قسم مؤشرات العين والفم والقدرات */
+        .features-row {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-top: 5px;
         }
-        .feature-card {
-            background: rgba(15, 23, 42, 0.7);
+        .feature-box-v3 {
+            background: rgba(15, 23, 42, 0.75);
             border: 1px solid rgba(56, 189, 248, 0.2);
             border-radius: 14px;
-            padding: 12px 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .box-title {
+            font-size: 11px;
+            color: #94a3b8;
+            display: flex;
+            justify-content: space-between;
+        }
+        .sub-preview {
+            width: 100%;
+            height: 45px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        .active-status-text {
+            font-size: 10px;
+            color: #22c55e;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* قائمة المميزات النصية السريعة */
+        .capabilities-list {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .capability-item {
+            font-size: 11px;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            padding-bottom: 4px;
+        }
+
+        /* 4. شبكة الأزرار الستة السفلية */
+        .bottom-nav-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .nav-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 12px;
+            padding: 10px 6px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -207,110 +295,137 @@ HTML_TEMPLATE = """
             cursor: pointer;
             transition: 0.2s;
         }
-        .feature-card:hover {
+        .nav-card:hover {
             border-color: #38bdf8;
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(15, 23, 42, 1);
         }
-        .feature-icon {
-            font-size: 20px;
-            margin-bottom: 6px;
-        }
-        .feature-title {
-            font-size: 11px;
-            color: #cbd5e1;
-        }
-        .footer-credit {
-            margin-top: 12px;
-            font-size: 11px;
-            color: #64748b;
+        .nav-icon { font-size: 18px; margin-bottom: 4px; }
+        .nav-text { font-size: 10px; color: #e2e8f0; }
+
+        .footer-note {
             text-align: center;
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 4px;
         }
     </style>
 </head>
 <body>
-    <div class="main-container">
-        <!-- الهيدر العلوي -->
-        <div class="app-header">
-            <div class="logo-area">
-                <div class="logo-badge">C</div>
-                <div class="title-text">
+    <div class="app-container">
+        <!-- الهيدر -->
+        <div class="top-header">
+            <div class="brand-box">
+                <div class="brand-logo">C</div>
+                <div class="brand-titles">
                     <h1>C ROBOT AI</h1>
                     <p>الروبوت الذكي المتكلم</p>
                 </div>
             </div>
-            <div class="lang-switcher">
-                <button class="lang-btn active">العربية</button>
-                <button class="lang-btn">English</button>
+            <div class="lang-switch">
+                <button class="l-btn active">العربية</button>
+                <button class="l-btn">English</button>
             </div>
         </div>
 
-        <!-- واجهة عرض الروبوت -->
-        <div class="robot-showcase">
-            <!-- صورة وجه الروبوت الحقيقية المتطابقة -->
-            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop" alt="C Robot AI Face" class="robot-circle-img">
-            
-            <div class="status-pill">
-                <div class="status-dot-green"></div>
-                <span>Online & Ready - متصل وجاهز (Port 9000)</span>
+        <!-- قسم التفاعل الرئيسي -->
+        <div class="robot-main-card">
+            <div class="robot-avatar-wrapper">
+                <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop" alt="C Robot Face">
             </div>
 
-            <div class="chat-display" id="chatDisplay">
-                <div class="msg-bot">🤖 مرحباً، أنا C ROBOT AI روبوت ذكي متكلم حقيقي، كيف يمكنني مساعدتك اليوم؟</div>
+            <div class="status-badge">
+                <div class="dot"></div>
+                <span>Online & Ready - متصل وجاهز (V3)</span>
             </div>
 
-            <button class="main-action-btn" onclick="triggerRobotTalk()">
+            <div class="chat-panel" id="chatBox">
+                <div class="msg-b">🤖 مرحباً، أنا C ROBOT AI روبوت ذكي متكلم حقيقي، كيف يمكنني مساعدتك اليوم؟</div>
+            </div>
+
+            <!-- موجات الصوت -->
+            <div class="sound-wave">
+                <div class="bar" style="height: 10px;"></div>
+                <div class="bar" style="height: 16px;"></div>
+                <div class="bar" style="height: 8px;"></div>
+                <div class="bar" style="height: 18px;"></div>
+                <div class="bar" style="height: 12px;"></div>
+                <div class="bar" style="height: 15px;"></div>
+            </div>
+
+            <button class="talk-action-btn" onclick="startV3Talk()">
                 🎙️ تحدث مع C ROBOT AI
             </button>
         </div>
 
-        <!-- الأزرار الستة الرئيسية في الأسفل -->
-        <div class="features-grid">
-            <div class="feature-card" onclick="runFeature('محادثة ذكية')">
-                <div class="feature-icon">💬</div>
-                <div class="feature-title">محادثة ذكية</div>
+        <!-- مؤشرات العين والفم (تتبع وعرض) -->
+        <div class="features-row">
+            <div class="feature-box-v3">
+                <div class="box-title"><span>تتبع العين</span><span>Eye</span></div>
+                <img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=300&auto=format&fit=crop" class="sub-preview" alt="Eye Tracking">
+                <div class="active-status-text"><span class="dot"></span> نشط Active</div>
             </div>
-            <div class="feature-card" onclick="runFeature('ترجمة فورية')">
-                <div class="feature-icon">🌐</div>
-                <div class="feature-title">ترجمة فورية</div>
-            </div>
-            <div class="feature-card" onclick="runFeature('مساعد شخصي')">
-                <div class="feature-icon">👤</div>
-                <div class="feature-title">مساعد شخصي</div>
-            </div>
-            <div class="feature-card" onclick="runFeature('بحث ذكي')">
-                <div class="feature-icon">🔍</div>
-                <div class="feature-title">بحث ذكي</div>
-            </div>
-            <div class="feature-card" onclick="runFeature('معلومات عامة')">
-                <div class="feature-icon">📖</div>
-                <div class="feature-title">معلومات عامة</div>
-            </div>
-            <div class="feature-card" onclick="runFeature('إعدادات')">
-                <div class="feature-icon">⚙️</div>
-                <div class="feature-title">إعدادات</div>
+            <div class="feature-box-v3">
+                <div class="box-title"><span>تحريك الفم</span><span>Mouth</span></div>
+                <img src="https://images.unsplash.com/photo-1509967419530-da38b4704bc6?q=80&w=300&auto=format&fit=crop" class="sub-preview" alt="Mouth Animation">
+                <div class="active-status-text"><span class="dot"></span> نشط Active</div>
             </div>
         </div>
 
-        <div class="footer-credit">
-            C ROBOT AI – الذكاء الاصطناعي في خدمتك
+        <!-- قائمة الخصائص الذكية الجانبية -->
+        <div class="capabilities-list">
+            <div class="capability-item">🌐 يتحدث العربية والإنجليزية بطلاقة</div>
+            <div class="capability-item">🧠 فهم الأسئلة المعقدة بدقة متناهية</div>
+            <div class="capability-item">⚡ إجابات فورية وتفاعل بصوت وصورة</div>
+        </div>
+
+        <!-- شبكة الأزرار السفلية الستة -->
+        <div class="bottom-nav-grid">
+            <div class="nav-card" onclick="runV3Action('محادثة ذكية')">
+                <div class="nav-icon">💬</div>
+                <div class="nav-text">محادثة ذكية</div>
+            </div>
+            <div class="nav-card" onclick="runV3Action('ترجمة فورية')">
+                <div class="nav-icon">🌐</div>
+                <div class="nav-text">ترجمة فورية</div>
+            </div>
+            <div class="nav-card" onclick="runV3Action('مساعد شخصي')">
+                <div class="nav-icon">👤</div>
+                <div class="nav-text">مساعد شخصي</div>
+            </div>
+            <div class="nav-card" onclick="runV3Action('بحث ذكي')">
+                <div class="nav-icon">🔍</div>
+                <div class="nav-text">بحث ذكي</div>
+            </div>
+            <div class="nav-card" onclick="runV3Action('معلومات عامة')">
+                <div class="nav-icon">📖</div>
+                <div class="nav-text">معلومات عامة</div>
+            </div>
+            <div class="nav-card" onclick="runV3Action('إعدادات')">
+                <div class="nav-icon">⚙️</div>
+                <div class="nav-text">إعدادات</div>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            C ROBOT AI V3 – الذكاء الاصطناعي في خدمتك
         </div>
     </div>
 
     <script>
-        function triggerRobotTalk() {
-            const display = document.getElementById('chatDisplay');
-            display.innerHTML += `<div class="msg-user">👤 مستخدم: ما هو الطقس اليوم في الجزائر؟</div>`;
+        function startV3Talk() {
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML += `<div class="msg-u">👤 مستخدم: ما هو الطقس اليوم في الجزائر؟</div>`;
             setTimeout(() => {
-                display.innerHTML += `<div class="msg-bot">🤖 C ROBOT AI: الطقس اليوم في الجزائر مشمس وجميل، درجة الحرارة 25°C. أتمنى لك يوماً رائعاً! ☀️</div>`;
-                display.scrollTop = display.scrollHeight;
+                chatBox.innerHTML += `<div class="msg-b">🤖 C ROBOT AI V3: الطقس اليوم في الجزائر مشمس، درجة الحرارة 25°C. جاهز دائماً لتلبية طلباتك! ✨</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
             }, 800);
-            display.scrollTop = display.scrollHeight;
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        function runFeature(featureName) {
-            const display = document.getElementById('chatDisplay');
-            display.innerHTML += `<div class="msg-bot">⚙️ تم تفعيل ميزة: ${featureName}. كيف أساعدك فيها؟</div>`;
-            display.scrollTop = display.scrollHeight;
+        function runV3Action(actionName) {
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML += `<div class="msg-b">⚙️ تم تفعيل ميزة (${actionName}) في الإصدار V3 بنجاح.</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
     </script>
 </body>
@@ -321,11 +436,11 @@ HTML_TEMPLATE = """
 def home():
     return render_template_string(HTML_TEMPLATE)
 
-@app.route('/api/chat', methods=['POST'])
-def chat():
+@app.route('/api/v3/chat', methods=['POST'])
+def v3_chat():
     data = request.json
-    user_message = data.get('message', '')
-    return jsonify({"response": f"تم استقبال طلبك: {user_message}"})
+    msg = data.get('message', '')
+    return jsonify({"status": "success", "reply": f"V3 Received: {msg}"})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT, debug=True)

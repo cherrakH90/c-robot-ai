@@ -1,24 +1,96 @@
 import os
 import signal
 import subprocess
+import sys
+import time
 
 PORT = 9000
 
-try:
-    command = f"lsof -t -i:{PORT}"
-    pid = subprocess.check_output(command, shell=True).decode().strip()
-    if pid:
-        os.kill(int(pid), signal.SIGKILL)
-        print(f"تم إيقاف الخادم القديم على المنفذ {PORT} بنجاح.")
-except Exception:
-    pass
+# ============================================================
+# 🔪 قتل الخادم القديم — يعمل على Linux + macOS + Windows
+# ============================================================
+def kill_existing_server(port):
+    """محاولة إيقاف أي عملية تستخدم المنفذ — عبر 4 طرق"""
+    killed = False
 
-from flask import Flask, render_template_string, send_from_directory
+    # الطريقة 1: lsof (Linux / macOS)
+    try:
+        cmd = f"lsof -t -i:{port}"
+        pids = subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL).decode().strip().split('\n')
+        for pid in pids:
+            if pid.strip():
+                try:
+                    os.kill(int(pid), signal.SIGKILL)
+                    print(f"✅ [lsof] تم إيقاف العملية {pid}")
+                    killed = True
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
+    # الطريقة 2: fuser (Linux)
+    if not killed and sys.platform.startswith('linux'):
+        try:
+            subprocess.run(f"fuser -k {port}/tcp", shell=True,
+                           stderr=subprocess.DEVNULL, timeout=3)
+            print(f"✅ [fuser] تم إيقاف العملية على المنفذ {port}")
+            killed = True
+        except Exception:
+            pass
+
+    # الطريقة 3: netstat + taskkill (Windows)
+    if not killed and sys.platform.startswith('win'):
+        try:
+            output = subprocess.check_output(f'netstat -ano | findstr :{port}',
+                                             shell=True).decode()
+            pids = set()
+            for line in output.splitlines():
+                parts = line.split()
+                if len(parts) >= 5 and parts[1].endswith(f":{port}"):
+                    pids.add(parts[-1])
+            for pid in pids:
+                subprocess.run(f"taskkill /F /PID {pid}", shell=True,
+                               stderr=subprocess.DEVNULL)
+                print(f"✅ [taskkill] تم إيقاف العملية {pid}")
+                killed = True
+        except Exception:
+            pass
+
+    # الطريقة 4: psutil (يعمل على كل الأنظمة إذا كان مثبتاً)
+    if not killed:
+        try:
+            import psutil
+            for conn in psutil.net_connections(kind='inet'):
+                if conn.laddr.port == port and conn.pid:
+                    try:
+                        p = psutil.Process(conn.pid)
+                        p.kill()
+                        print(f"✅ [psutil] تم إيقاف العملية {conn.pid}")
+                        killed = True
+                    except Exception:
+                        pass
+        except ImportError:
+            pass
+        except Exception:
+            pass
+
+    if not killed:
+        print(f"ℹ️  لا توجد عملية تستخدم المنفذ {port} (أو لا توجد صلاحيات).")
+
+    # انتظار قصير لتحرير المنفذ
+    time.sleep(0.5)
+    return killed
+
+
+kill_existing_server(PORT)
+
+from flask import Flask, render_template_string, send_from_directory, jsonify, request
 
 app = Flask(__name__)
 
+
 # ============================================================
-# مسار خدمة خلفيات Bg_XX.jpg من جذر المشروع
+# مسار خدمة خلفيات Bg_XX.jpg
 # ============================================================
 @app.route('/Bg_<int:num>.jpg')
 def serve_bg(num):
@@ -26,20 +98,121 @@ def serve_bg(num):
         return send_from_directory('.', f'Bg_{num:02d}.jpg')
     return "Image not found", 404
 
+
 # ============================================================
-# مسار خدمة صورة وجه الروبوت robot_face.png
+# مسار خدمة صورة وجه الروبوت
 # ============================================================
 @app.route('/robot_face.png')
 def serve_robot_face():
     return send_from_directory('.', 'robot_face.png')
+
+
+# ============================================================
+# 📱 PWA — manifest
+# ============================================================
+@app.route('/manifest.json')
+def manifest():
+    return jsonify({
+        "name": "C ROBOT AI V6",
+        "short_name": "C ROBOT",
+        "description": "الروبوت الذكي المتكلم الحقيقي",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#05070f",
+        "theme_color": "#0ea5e9",
+        "orientation": "portrait",
+        "icons": [
+            {"src": "/robot_face.png", "sizes": "192x192", "type": "image/png"},
+            {"src": "/robot_face.png", "sizes": "512x512", "type": "image/png"}
+        ]
+    })
+
+
+# ============================================================
+# 📱 PWA — service worker
+# ============================================================
+@app.route('/sw.js')
+def service_worker():
+    sw = """
+    const CACHE = 'crobot-v6';
+    self.addEventListener('install', e => {
+        e.waitUntil(caches.open(CACHE).then(c => c.addAll(['/', '/robot_face.png'])));
+        self.skipWaiting();
+    });
+    self.addEventListener('activate', e => {
+        e.waitUntil(caches.keys().then(keys =>
+            Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+        ));
+        self.clients.claim();
+    });
+    self.addEventListener('fetch', e => {
+        e.respondWith(
+            caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('/')))
+        );
+    });
+    """
+    return sw, 200, {'Content-Type': 'application/javascript'}
+
+
+# ============================================================
+# 🤖 نقطة نهاية API جاهزة للربط بـ OpenAI / Gemini
+# ============================================================
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    """
+    نقطة نهاية للربط بالذكاء الاصطناعي.
+    حالياً تعيد رد تجريبي — استبدلها بـ OpenAI/Gemini لاحقاً.
+    مثال:
+        from openai import OpenAI
+        client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+        r = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": user_msg}]
+        )
+        reply = r.choices[0].message.content
+    """
+    data = request.get_json(silent=True) or {}
+    user_msg = (data.get('message') or '').strip()
+    lang = data.get('lang', 'en')
+
+    if not user_msg:
+        return jsonify({"reply": "Please provide a message."}), 400
+
+    # 🔁 رد تجريبي — استبدله بـ AI حقيقي
+    if lang == 'ar':
+        reply = f"لقد سمعت سؤالك: {user_msg}. جاري معالجته."
+    else:
+        reply = f"I heard your question: {user_msg}. Processing now."
+
+    return jsonify({"reply": reply, "lang": lang})
+
+
+# ============================================================
+# 🏥 Health check
+# ============================================================
+@app.route('/health')
+def health():
+    return jsonify({
+        "status": "online",
+        "version": "6.0.0",
+        "name": "C ROBOT AI",
+        "port": PORT
+    })
+
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" id="htmlRoot">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>C ROBOT AI V5 - Cinematic Glass Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="description" content="C ROBOT AI V6 - روبوت ذكي متكلم حقيقي">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/robot_face.png">
+    <title>C ROBOT AI V6 - Modern Tech Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
         * {
@@ -129,7 +302,7 @@ HTML_TEMPLATE = """
         }
 
         /* ============================================================
-           شاشة iPhone مع خلفية Bg_01.jpg
+           شاشة iPhone
         ============================================================ */
         .iphone-screen {
             position: relative;
@@ -140,12 +313,9 @@ HTML_TEMPLATE = """
             display: flex;
             flex-direction: column;
             isolation: isolate;
-
-            /* ✅ خلفية Bg_01.jpg */
             background: url('/Bg_01.jpg') no-repeat center center / cover;
         }
 
-        /* طبقة تعتيم فوق الخلفية لتحسين القراءة */
         .iphone-screen::before {
             content: "";
             position: absolute;
@@ -161,7 +331,6 @@ HTML_TEMPLATE = """
             pointer-events: none;
         }
 
-        /* Dynamic Island */
         .dynamic-island {
             position: absolute;
             top: 12px;
@@ -185,7 +354,6 @@ HTML_TEMPLATE = """
             box-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
         }
 
-        /* Status Bar */
         .status-bar {
             position: relative;
             z-index: 50;
@@ -207,9 +375,6 @@ HTML_TEMPLATE = """
             font-size: 12px;
         }
 
-        /* ============================================================
-           محتوى الشاشة
-        ============================================================ */
         .screen-content {
             position: relative;
             z-index: 10;
@@ -223,7 +388,6 @@ HTML_TEMPLATE = """
         }
         .screen-content::-webkit-scrollbar { display: none; }
 
-        /* Glass Card */
         .glass {
             background: rgba(255, 255, 255, 0.07);
             backdrop-filter: blur(22px) saturate(180%);
@@ -246,7 +410,6 @@ HTML_TEMPLATE = """
             pointer-events: none;
         }
 
-        /* Header */
         .top-header {
             padding: 12px 14px;
             display: flex;
@@ -303,7 +466,6 @@ HTML_TEMPLATE = """
             box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
         }
 
-        /* Robot Card */
         .robot-main-card {
             padding: 18px 14px;
             display: flex;
@@ -313,11 +475,7 @@ HTML_TEMPLATE = """
         }
 
         /* ============================================================
-           🤖 التطوير: رأس روبوت 3D متحرك بالكامل (بناءً على الصورة)
-           - منظور 3D perspective + preserve-3d
-           - رأس يتحرك (يمين/يسار/فوق/تحت/ميل)
-           - عينان ترمشان بشكل واقعي (Overlay)
-           - فم ينفتح ويغلق بتزامن مع الكلام (Overlay)
+           🤖 رأس روبوت 3D
         ============================================================ */
         .robot-3d-stage {
             width: 100%;
@@ -338,7 +496,6 @@ HTML_TEMPLATE = """
             transform-origin: 50% 80%;
         }
 
-        /* حركة الرأس في وضع الخمول */
         @keyframes headIdle {
             0%   { transform: rotateY(0deg)   rotateX(0deg)   translateY(0); }
             15%  { transform: rotateY(-12deg) rotateX(3deg)   translateY(-2px); }
@@ -349,7 +506,6 @@ HTML_TEMPLATE = """
             100% { transform: rotateY(0deg)   rotateX(0deg)   translateY(0); }
         }
 
-        /* حالة "يتكلم" – حركة رأس أكثر حيوية */
         .robot-head-3d.talking-head {
             animation: headTalking 1.2s ease-in-out infinite;
         }
@@ -362,7 +518,14 @@ HTML_TEMPLATE = """
             100% { transform: rotateY(0deg)   rotateX(0deg)  translateY(0)    translateZ(0); }
         }
 
-        /* قاعدة العنق / الجسم */
+        .robot-head-3d.listening-head {
+            animation: headListening 2s ease-in-out infinite;
+        }
+        @keyframes headListening {
+            0%, 100% { transform: rotateY(0deg) rotateX(8deg); }
+            50%      { transform: rotateY(0deg) rotateX(12deg); }
+        }
+
         .robot-neck {
             position: absolute;
             bottom: -20px;
@@ -377,7 +540,6 @@ HTML_TEMPLATE = """
             z-index: -1;
         }
 
-        /* الرأس نفسه – يعتمد على الصورة */
         .robot-head-cube {
             position: relative;
             width: 100%;
@@ -393,7 +555,6 @@ HTML_TEMPLATE = """
             overflow: hidden;
         }
 
-        /* لمعة زجاجية على الرأس */
         .robot-head-cube::before {
             content: "";
             position: absolute;
@@ -405,7 +566,6 @@ HTML_TEMPLATE = """
             z-index: 5;
         }
 
-        /* الوجه (طبقة الأزرار والعيون) */
         .robot-face-3d {
             position: absolute;
             inset: 0;
@@ -420,7 +580,6 @@ HTML_TEMPLATE = """
             z-index: 10;
         }
 
-        /* العينان - طبقات فوق الصورة */
         .robot-eyes-3d {
             display: flex;
             gap: 30px;
@@ -439,19 +598,17 @@ HTML_TEMPLATE = """
             background: transparent;
             overflow: hidden;
         }
-        /* جفن العين (يغلق ويفتح) */
         .eye-3d::before {
             content: "";
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 100%;
-            background: #dcdcdc; /* لون الجلد المعدني */
+            background: #dcdcdc;
             border-radius: 50% 50% 0 0;
             transform-origin: top;
             animation: eyeBlink 4.5s infinite;
             z-index: 2;
         }
-        /* بؤبؤ داخلي (يبدو كأنه يتحرك) */
         .eye-3d::after {
             content: "";
             position: absolute;
@@ -470,7 +627,6 @@ HTML_TEMPLATE = """
             96%           { transform: scaleY(0); }
         }
 
-        /* فم الروبوت - طبقة فوق الصورة */
         .robot-mouth-3d {
             position: absolute;
             top: 68%;
@@ -479,7 +635,7 @@ HTML_TEMPLATE = """
             width: 30px;
             height: 10px;
             border-radius: 50%;
-            background: #1a1a1a; /* لون فتحة الفم */
+            background: #1a1a1a;
             overflow: hidden;
             transition: height 0.1s ease;
         }
@@ -492,7 +648,6 @@ HTML_TEMPLATE = """
             100% { height: 6px;  width: 24px; }
         }
 
-        /* هالة دوران حول الرأس */
         .robot-avatar-wrapper {
             position: relative;
             width: 100%;
@@ -526,7 +681,6 @@ HTML_TEMPLATE = """
             to   { transform: rotate(360deg); }
         }
 
-        /* مؤشرات الحالة الصغيرة حول الرأس */
         .robot-status-ring {
             position: absolute;
             inset: 0;
@@ -569,7 +723,6 @@ HTML_TEMPLATE = """
             50%      { opacity: 0.5; transform: scale(1.3); }
         }
 
-        /* Chat Panel */
         .chat-panel {
             width: 100%;
             background: rgba(0, 0, 0, 0.45);
@@ -592,7 +745,6 @@ HTML_TEMPLATE = """
         .msg-u { color: #cbd5e1; margin-bottom: 4px; }
         .msg-b { color: #38bdf8; font-weight: 500; }
 
-        /* Sound Wave */
         .sound-wave {
             display: flex;
             align-items: center;
@@ -617,7 +769,6 @@ HTML_TEMPLATE = """
             50%      { height: 18px; opacity: 1; }
         }
 
-        /* Talk Button */
         .talk-action-btn {
             width: 100%;
             padding: 14px;
@@ -654,12 +805,16 @@ HTML_TEMPLATE = """
         .talk-action-btn:hover::before { left: 100%; }
         .talk-action-btn:active {
             transform: scale(0.97);
-            box-shadow:
-                0 4px 15px rgba(14, 165, 233, 0.6),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        .talk-action-btn.listening {
+            background: linear-gradient(135deg, #dc2626, #ef4444, #f97316);
+            animation: listenPulse 1s ease-in-out infinite;
+        }
+        @keyframes listenPulse {
+            0%, 100% { box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6); }
+            50%      { box-shadow: 0 8px 45px rgba(239, 68, 68, 0.9); }
         }
 
-        /* Quick Actions Row */
         .quick-actions {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -693,7 +848,6 @@ HTML_TEMPLATE = """
             font-weight: 600;
         }
 
-        /* Stats Row */
         .stats-row {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -727,7 +881,6 @@ HTML_TEMPLATE = """
             letter-spacing: 0.3px;
         }
 
-        /* Features Row */
         .features-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -763,7 +916,6 @@ HTML_TEMPLATE = """
             font-weight: 600;
         }
 
-        /* Capabilities List */
         .capabilities-list {
             padding: 12px 14px;
             display: flex;
@@ -785,7 +937,6 @@ HTML_TEMPLATE = """
             padding-bottom: 0;
         }
 
-        /* Bottom Nav */
         .bottom-nav-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -823,7 +974,6 @@ HTML_TEMPLATE = """
             font-weight: 600;
         }
 
-        /* Footer */
         .footer-note {
             text-align: center;
             font-size: 9.5px;
@@ -835,8 +985,27 @@ HTML_TEMPLATE = """
         }
 
         /* ============================================================
-           Responsive
+           📊 شريط معلومات النظام الجديد
         ============================================================ */
+        .sys-info-strip {
+            display: flex;
+            justify-content: space-around;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 12px;
+            font-size: 8.5px;
+            color: #94a3b8;
+            font-family: 'Orbitron', monospace;
+            gap: 8px;
+        }
+        .sys-info-strip span {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .sys-info-strip .ok { color: #22c55e; }
+        .sys-info-strip .warn { color: #f59e0b; }
+
         @media (max-width: 480px) {
             body { padding: 0; background: #05070f; }
             .iphone-frame {
@@ -861,7 +1030,6 @@ HTML_TEMPLATE = """
 
     <div class="iphone-screen">
 
-        <!-- Status Bar -->
         <div class="status-bar">
             <div class="time" id="statusTime">9:41</div>
             <div class="icons">
@@ -871,10 +1039,8 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <!-- Content -->
         <div class="screen-content">
 
-            <!-- Header -->
             <div class="top-header glass">
                 <div class="brand-box">
                     <div class="brand-logo">C</div>
@@ -889,10 +1055,8 @@ HTML_TEMPLATE = """
                 </div>
             </div>
 
-            <!-- Robot Card -->
             <div class="robot-main-card glass">
 
-                <!-- 🤖 رأس روبوت 3D الجديد بناءً على الصورة -->
                 <div class="robot-avatar-wrapper">
                     <div class="robot-status-ring">
                         <span class="robot-status-dot d1"></span>
@@ -907,13 +1071,11 @@ HTML_TEMPLATE = """
 
                             <div class="robot-head-cube">
                                 <div class="robot-face-3d">
-                                    <!-- عيون فوق الصورة -->
                                     <div class="robot-eyes-3d">
                                         <div class="eye-3d"></div>
                                         <div class="eye-3d"></div>
                                     </div>
 
-                                    <!-- فم فوق الصورة -->
                                     <div class="robot-mouth-3d" id="robotMouth"></div>
                                 </div>
                             </div>
@@ -944,7 +1106,14 @@ HTML_TEMPLATE = """
                 </button>
             </div>
 
-            <!-- ✨ جديد: Quick Actions -->
+            <!-- 📊 شريط معلومات النظام الحية -->
+            <div class="sys-info-strip">
+                <span>🔋 <b id="sysBattery">—</b></span>
+                <span>🌐 <b id="sysNetwork">—</b></span>
+                <span>🎤 <b id="sysMic">—</b></span>
+                <span>🤖 <b id="sysStatus">V6</b></span>
+            </div>
+
             <div class="quick-actions">
                 <div class="quick-btn" onclick="quickAction('weather')">
                     <div class="quick-icon">🌤️</div>
@@ -960,7 +1129,6 @@ HTML_TEMPLATE = """
                 </div>
             </div>
 
-            <!-- ✨ جديد: Stats Row -->
             <div class="stats-row">
                 <div class="stat-card">
                     <div class="stat-value" id="statUsers">1,247</div>
@@ -976,7 +1144,6 @@ HTML_TEMPLATE = """
                 </div>
             </div>
 
-            <!-- Features Row -->
             <div class="features-row">
                 <div class="feature-box-v3 glass">
                     <div class="box-title">
@@ -1000,14 +1167,12 @@ HTML_TEMPLATE = """
                 </div>
             </div>
 
-            <!-- Capabilities -->
             <div class="capabilities-list glass" id="capList">
                 <div class="capability-item">🌐 يتحدث العربية والإنجليزية بطلاقة</div>
                 <div class="capability-item">🧠 فهم الأسئلة المعقدة بدقة متناهية</div>
-                <div class="capability-item">⚡ إجابات فورية وتفاعل بصوت وصورة</div>
+                <div class="capability-item">🎤 يستمع إلى صوتك ويرد فوراً</div>
             </div>
 
-            <!-- Bottom Nav -->
             <div class="bottom-nav-grid">
                 <div class="nav-card" onclick="runAction('chat')">
                     <div class="nav-icon">💬</div>
@@ -1036,7 +1201,7 @@ HTML_TEMPLATE = """
             </div>
 
             <div class="footer-note" id="footerText">
-                C ROBOT AI V5 – Cinematic Glass Edition
+                C ROBOT AI V6 – Modern Tech Edition
             </div>
 
         </div>
@@ -1045,12 +1210,13 @@ HTML_TEMPLATE = """
 
 <script>
     let currentLang = 'ar';
+    let wakeLock = null;
+    let recognition = null;
+    let isListening = false;
+    let isSpeaking = false;
 
     /* ============================================================
-       🎛️ محرك الصوت الروبوتي 100%
-       - AudioContext لتوليد نغمات روبوتية
-       - SpeechSynthesis بنبرة إنجليزية روبوتية (pitch منخفض جداً)
-       - فلترة + ring modulation لمحاكاة صوت الروبوت
+       🎛️ محرك الصوت الروبوتي (مع Web Audio Filters)
     ============================================================ */
     let audioCtx = null;
     function getAudioCtx() {
@@ -1067,24 +1233,31 @@ HTML_TEMPLATE = """
         return audioCtx;
     }
 
-    /* نغمة روبوتية قصيرة (beep) قبل / بعد الكلام */
+    /* نغمة روبوتية مع فلترة */
     function playRobotBeep(freq = 880, duration = 0.08, type = 'square', gain = 0.06) {
         const ctx = getAudioCtx();
         if (!ctx) return;
         const osc = ctx.createOscillator();
         const g = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+
+        filter.type = 'bandpass';
+        filter.frequency.value = freq * 1.2;
+        filter.Q.value = 8;
+
         osc.type = type;
         osc.frequency.setValueAtTime(freq, ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(freq * 0.6, ctx.currentTime + duration);
+
         g.gain.setValueAtTime(0, ctx.currentTime);
         g.gain.linearRampToValueAtTime(gain, ctx.currentTime + 0.01);
         g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
-        osc.connect(g).connect(ctx.destination);
+
+        osc.connect(filter).connect(g).connect(ctx.destination);
         osc.start();
         osc.stop(ctx.currentTime + duration + 0.02);
     }
 
-    /* سلسلة نغمات "تشغيل/معالجة" روبوتية */
     function playRobotProcessing() {
         playRobotBeep(1200, 0.05, 'square', 0.05);
         setTimeout(() => playRobotBeep(900, 0.05, 'square', 0.05), 70);
@@ -1092,14 +1265,12 @@ HTML_TEMPLATE = """
     }
 
     /* ============================================================
-       🗣️ محرك الكلام الروبوتي (إنجليزي 100% بنبرة روبوتية)
+       🗣️ محرك الكلام (إنجليزي روبوتي)
     ============================================================ */
     function pickRoboticEnglishVoice() {
         if (!('speechSynthesis' in window)) return null;
         const voices = window.speechSynthesis.getVoices();
         if (!voices || !voices.length) return null;
-
-        // نبحث عن أفضل صوت إنجليزي روبوتي / ذكوري منخفض
         const preferred = [
             /Google UK English Male/i,
             /Microsoft (David|Mark|George)/i,
@@ -1118,18 +1289,14 @@ HTML_TEMPLATE = """
     }
 
     function getEnglishVoice() {
-        const v = pickRoboticEnglishVoice();
-        return v || null;
+        return pickRoboticEnglishVoice() || null;
     }
 
-    // إعادة تحميل الأصوات عند توفرها
     if ('speechSynthesis' in window) {
         window.speechSynthesis.onvoiceschanged = () => { getEnglishVoice(); };
-        // بعض المتصفحات تحتاج استدعاء مسبق
         window.speechSynthesis.getVoices();
     }
 
-    /* تشغيل صوت روبوتي إنجليزي حقيقي 100% */
     function speakRobotEnglish(text) {
         const chatBox = document.getElementById('chatBox');
         chatBox.innerHTML += `<div class="msg-b">🤖 ${text}</div>`;
@@ -1138,16 +1305,18 @@ HTML_TEMPLATE = """
         const head  = document.getElementById('robotHead3D');
         const mouth = document.getElementById('robotMouth');
 
-        // حركة الرأس والفم
+        head.classList.remove('listening-head');
         head.classList.add('talking-head');
         mouth.classList.add('talking');
+        isSpeaking = true;
 
-        // نغمة تحضير روبوتية قبل الكلام
         playRobotProcessing();
+        vibrate([50, 30, 50]);
 
         const stopAnim = () => {
             head.classList.remove('talking-head');
             mouth.classList.remove('talking');
+            isSpeaking = false;
         };
 
         if ('speechSynthesis' in window) {
@@ -1157,24 +1326,18 @@ HTML_TEMPLATE = """
             const v = getEnglishVoice();
             if (v) utter.voice = v;
 
-            // 🇬🇧 إنجليزي 100% بنبرة روبوتية
-            utter.lang  = 'en-US';
-            utter.pitch = 0.05;   // منخفض جداً => نبرة روبوتية عميقة
-            utter.rate  = 0.82;   // أبطأ قليلاً => إحساس آلي
+            utter.lang = 'en-US';
+            utter.pitch = 0.05;
+            utter.rate = 0.82;
             utter.volume = 1.0;
 
-            // نغمة "بدء الإرسال" روبوتية عند بداية الكلام
-            utter.onstart = () => {
-                playRobotBeep(1500, 0.06, 'square', 0.05);
-            };
-
-            // نبضات روبوتية أثناء الكلام (كل 260ms)
             let pulseTimer = null;
             const startPulses = () => {
                 pulseTimer = setInterval(() => {
                     playRobotBeep(700 + Math.random() * 900, 0.03, 'square', 0.02);
                 }, 260);
             };
+
             utter.onstart = () => {
                 playRobotBeep(1500, 0.06, 'square', 0.05);
                 startPulses();
@@ -1192,11 +1355,187 @@ HTML_TEMPLATE = """
 
             window.speechSynthesis.speak(utter);
         } else {
-            // fallback: إيقاف الحركة بعد مدة تقديرية
             setTimeout(stopAnim, Math.max(1500, text.length * 60));
         }
     }
 
+    /* ============================================================
+       🎤 SpeechRecognition — الروبوت يسمعك فعلاً
+    ============================================================ */
+    function initRecognition() {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+            document.getElementById('sysMic').textContent = 'N/A';
+            document.getElementById('sysMic').className = 'warn';
+            return null;
+        }
+        const r = new SR();
+        r.continuous = false;
+        r.interimResults = false;
+        r.maxAlternatives = 1;
+        r.lang = currentLang === 'ar' ? 'ar-SA' : 'en-US';
+
+        r.onstart = () => {
+            isListening = true;
+            const btn = document.getElementById('talkBtn');
+            btn.classList.add('listening');
+            btn.innerHTML = '🔴 ' + (currentLang === 'ar' ? 'أستمع إليك...' : 'Listening...');
+            const head = document.getElementById('robotHead3D');
+            head.classList.remove('talking-head');
+            head.classList.add('listening-head');
+            document.getElementById('sysMic').textContent = 'ON';
+            document.getElementById('sysMic').className = 'ok';
+            playRobotBeep(1800, 0.05, 'sine', 0.04);
+        };
+
+        r.onresult = (e) => {
+            const transcript = e.results[0][0].transcript;
+            const chatBox = document.getElementById('chatBox');
+            chatBox.innerHTML += `<div class="msg-u">👤 ${transcript}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+            respondToUser(transcript);
+        };
+
+        r.onerror = (e) => {
+            console.warn('Speech error:', e.error);
+            resetListenUI();
+            if (e.error === 'not-allowed') {
+                addBotMsg(currentLang === 'ar'
+                    ? 'الرجاء السماح بالوصول إلى الميكروفون.'
+                    : 'Please allow microphone access.');
+            }
+        };
+
+        r.onend = () => {
+            resetListenUI();
+        };
+
+        return r;
+    }
+
+    function resetListenUI() {
+        isListening = false;
+        const btn = document.getElementById('talkBtn');
+        btn.classList.remove('listening');
+        btn.innerHTML = translations[currentLang].talkBtn;
+        const head = document.getElementById('robotHead3D');
+        head.classList.remove('listening-head');
+        document.getElementById('sysMic').textContent = 'OFF';
+        document.getElementById('sysMic').className = '';
+    }
+
+    function addBotMsg(text) {
+        const chatBox = document.getElementById('chatBox');
+        chatBox.innerHTML += `<div class="msg-b">🤖 ${text}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    /* إرسال النص للخادم والحصول على رد */
+    async function respondToUser(userText) {
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: userText, lang: currentLang })
+            });
+            const data = await res.json();
+            speak(data.reply || 'I did not understand.');
+        } catch (e) {
+            // fallback محلي
+            speak(currentLang === 'ar'
+                ? `لقد سمعت: ${userText}`
+                : `I heard: ${userText}`);
+        }
+    }
+
+    function triggerTalk() {
+        getAudioCtx();
+        acquireWakeLock();
+        if (isListening) {
+            try { recognition && recognition.stop(); } catch (e) {}
+            return;
+        }
+        if (!recognition) recognition = initRecognition();
+        if (!recognition) {
+            speak("Speech recognition is not supported on this browser.");
+            return;
+        }
+        try {
+            recognition.lang = currentLang === 'ar' ? 'ar-SA' : 'en-US';
+            recognition.start();
+        } catch (e) {
+            // already started
+        }
+    }
+
+    /* ============================================================
+       🔒 Wake Lock — الشاشة لا تنطفئ
+    ============================================================ */
+    async function acquireWakeLock() {
+        try {
+            if ('wakeLock' in navigator && !wakeLock) {
+                wakeLock = await navigator.wakeLock.request('screen');
+                wakeLock.addEventListener('release', () => { wakeLock = null; });
+            }
+        } catch (e) {}
+    }
+
+    /* ============================================================
+       📳 Vibration API
+    ============================================================ */
+    function vibrate(pattern) {
+        if ('vibrate' in navigator) {
+            try { navigator.vibrate(pattern); } catch (e) {}
+        }
+    }
+
+    /* ============================================================
+       🔋 Battery + 🌐 Network APIs
+    ============================================================ */
+    async function initSystemInfo() {
+        // Battery
+        if ('getBattery' in navigator) {
+            try {
+                const b = await navigator.getBattery();
+                const update = () => {
+                    document.getElementById('sysBattery').textContent =
+                        Math.round(b.level * 100) + '%' + (b.charging ? '⚡' : '');
+                };
+                update();
+                b.addEventListener('levelchange', update);
+                b.addEventListener('chargingchange', update);
+            } catch (e) {}
+        } else {
+            document.getElementById('sysBattery').textContent = 'N/A';
+        }
+
+        // Network
+        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        const updateNet = () => {
+            if (conn) {
+                document.getElementById('sysNetwork').textContent = (conn.effectiveType || 'on').toUpperCase();
+            } else {
+                document.getElementById('sysNetwork').textContent = navigator.onLine ? 'ON' : 'OFF';
+            }
+        };
+        updateNet();
+        if (conn) conn.addEventListener('change', updateNet);
+        window.addEventListener('online', updateNet);
+        window.addEventListener('offline', updateNet);
+
+        // Mic
+        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+            document.getElementById('sysMic').textContent = 'OK';
+            document.getElementById('sysMic').className = 'ok';
+        } else {
+            document.getElementById('sysMic').textContent = 'N/A';
+            document.getElementById('sysMic').className = 'warn';
+        }
+    }
+
+    /* ============================================================
+       🌐 الترجمة
+    ============================================================ */
     const translations = {
         ar: {
             sub: "الروبوت الذكي المتكلم",
@@ -1209,10 +1548,10 @@ HTML_TEMPLATE = """
             caps: [
                 "🌐 يتحدث العربية والإنجليزية بطلاقة",
                 "🧠 فهم الأسئلة المعقدة بدقة متناهية",
-                "⚡ إجابات فورية وتفاعل بصوت وصورة"
+                "🎤 يستمع إلى صوتك ويرد فوراً"
             ],
             navs: ["محادثة ذكية", "ترجمة فورية", "مساعد شخصي", "بحث ذكي", "معلومات عامة", "إعدادات"],
-            footer: "C ROBOT AI V5 – Cinematic Glass Edition",
+            footer: "C ROBOT AI V6 – Modern Tech Edition",
             speechWelcome: "Hello, I am C ROBOT AI. The real talking AI robot. Systems online. Ready to assist you now."
         },
         en: {
@@ -1226,10 +1565,10 @@ HTML_TEMPLATE = """
             caps: [
                 "🌐 Speaks Arabic and English fluently",
                 "🧠 Understands complex questions precisely",
-                "⚡ Instant responses with voice & vision"
+                "🎤 Listens to your voice and replies instantly"
             ],
             navs: ["Smart Chat", "Translate", "Assistant", "Smart Search", "Knowledge", "Settings"],
-            footer: "C ROBOT AI V5 – Cinematic Glass Edition",
+            footer: "C ROBOT AI V6 – Modern Tech Edition",
             speechWelcome: "Hello, I am C ROBOT AI. The real talking AI robot. Systems online. Ready to assist you now."
         }
     };
@@ -1263,8 +1602,9 @@ HTML_TEMPLATE = """
         document.getElementById('lblEyeActive').innerHTML = `<span class="dot"></span> ${t.active}`;
         document.getElementById('lblMouthActive').innerHTML = `<span class="dot"></span> ${t.active}`;
 
-        const capItems = document.querySelectorAll('.capability-item');
-        capItems.forEach((item, idx) => { item.innerText = t.caps[idx]; });
+        document.querySelectorAll('.capability-item').forEach((item, idx) => {
+            item.innerText = t.caps[idx];
+        });
 
         for (let i = 1; i <= 6; i++) {
             document.getElementById('nav' + i).innerText = t.navs[i - 1];
@@ -1274,17 +1614,10 @@ HTML_TEMPLATE = """
         speak(t.speechWelcome);
     }
 
-    /* المحرك الرئيسي للكلام – يستخدم الصوت الروبوتي الإنجليزي */
     function speak(text) {
         speakRobotEnglish(text);
     }
 
-    function triggerTalk() {
-        const msg = "I am listening to you now. Please, ask your question.";
-        speak(msg);
-    }
-
-    // ✨ جديد: إجراءات سريعة
     function quickAction(action) {
         const responses = {
             ar: {
@@ -1323,7 +1656,6 @@ HTML_TEMPLATE = """
         speak(responses[currentLang][action]);
     }
 
-    // ✨ تأثير تحديث الأرقام في الإحصائيات
     function animateStats() {
         const users = document.getElementById('statUsers');
         const chats = document.getElementById('statChats');
@@ -1338,28 +1670,20 @@ HTML_TEMPLATE = """
     }
     animateStats();
 
-    /* ============================================================
-       🤖 تحسينات إضافية لرأس الروبوت 3D
-       - حركة رأس عشوائية خفيفة حتى بدون كلام
-       - تفاعل العينين مع المؤشر / اللمس
-    ============================================================ */
+    /* تفاعل العينين مع المؤشر */
     (function robotHeadEnhancements() {
         const head = document.getElementById('robotHead3D');
         if (!head) return;
-
-        // نبضة رأس عشوائية كل فترة لإحياء الروبوت
         setInterval(() => {
-            if (head.classList.contains('talking-head')) return;
+            if (head.classList.contains('talking-head') ||
+                head.classList.contains('listening-head')) return;
             const rx = (Math.random() * 6 - 3).toFixed(2);
             const ry = (Math.random() * 16 - 8).toFixed(2);
             head.style.transition = 'transform 1.2s ease-in-out';
             head.style.transform = `rotateY(${ry}deg) rotateX(${rx}deg)`;
-            setTimeout(() => {
-                head.style.transform = '';
-            }, 1200);
+            setTimeout(() => { head.style.transform = ''; }, 1200);
         }, 5500);
 
-        // تفاعل العينين مع حركة المؤشر (تتبع بسيط)
         document.addEventListener('mousemove', (e) => {
             const pupils = document.querySelectorAll('.eye-3d');
             if (!pupils.length) return;
@@ -1373,18 +1697,41 @@ HTML_TEMPLATE = """
         });
     })();
 
-    /* تسخين محرك الصوت عند أول تفاعل من المستخدم */
+    /* 📱 تسجيل Service Worker */
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+    }
+
+    /* إعادة الحصول على Wake Lock عند العودة للصفحة */
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            acquireWakeLock();
+        }
+    });
+
+    /* تسخين AudioContext */
     document.addEventListener('click', () => { getAudioCtx(); }, { once: true });
     document.addEventListener('touchstart', () => { getAudioCtx(); }, { once: true });
+
+    /* تشغيل معلومات النظام */
+    initSystemInfo();
+
+    console.log('%c🤖 C ROBOT AI V6 – Modern Tech Edition','color:#0ea5e9;font-size:16px;font-weight:bold;');
+    console.log('%c✨ Speech Recognition · PWA · Wake Lock · Battery · Network','color:#a855f7;font-size:11px;');
 </script>
 </body>
 </html>
 """
 
+
 @app.route('/')
 def home():
     return render_template_string(HTML_TEMPLATE)
 
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', PORT))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    print(f"🤖 C ROBOT AI V6 يعمل على http://localhost:{port}")
+    app.run(host='0.0.0.0', port=port, debug=False, threaded=True)

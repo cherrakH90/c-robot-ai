@@ -26,6 +26,13 @@ def serve_bg(num):
         return send_from_directory('.', f'Bg_{num:02d}.jpg')
     return "Image not found", 404
 
+# ============================================================
+# مسار خدمة صورة وجه الروبوت robot_face.png
+# ============================================================
+@app.route('/robot_face.png')
+def serve_robot_face():
+    return send_from_directory('.', 'robot_face.png')
+
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" id="htmlRoot">
@@ -306,11 +313,11 @@ HTML_TEMPLATE = """
         }
 
         /* ============================================================
-           🤖 التطوير: رأس روبوت 3D متحرك بالكامل
+           🤖 التطوير: رأس روبوت 3D متحرك بالكامل (بناءً على الصورة)
            - منظور 3D perspective + preserve-3d
            - رأس يتحرك (يمين/يسار/فوق/تحت/ميل)
-           - عينان ترمشان بشكل واقعي
-           - فم ينفتح ويغلق بتزامن مع الكلام
+           - عينان ترمشان بشكل واقعي (Overlay)
+           - فم ينفتح ويغلق بتزامن مع الكلام (Overlay)
         ============================================================ */
         .robot-3d-stage {
             width: 100%;
@@ -324,8 +331,8 @@ HTML_TEMPLATE = """
 
         .robot-head-3d {
             position: relative;
-            width: 140px;
-            height: 150px;
+            width: 160px;
+            height: 170px;
             transform-style: preserve-3d;
             animation: headIdle 6s ease-in-out infinite;
             transform-origin: 50% 80%;
@@ -358,11 +365,11 @@ HTML_TEMPLATE = """
         /* قاعدة العنق / الجسم */
         .robot-neck {
             position: absolute;
-            bottom: -14px;
+            bottom: -20px;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px;
-            height: 26px;
+            width: 80px;
+            height: 30px;
             border-radius: 12px;
             background: linear-gradient(180deg, #1e293b, #0b1220);
             border: 1px solid rgba(56, 189, 248, 0.35);
@@ -370,22 +377,19 @@ HTML_TEMPLATE = """
             z-index: -1;
         }
 
-        /* الرأس نفسه – مكعب 3D */
+        /* الرأس نفسه – يعتمد على الصورة */
         .robot-head-cube {
             position: relative;
             width: 100%;
             height: 100%;
             transform-style: preserve-3d;
-            border-radius: 26px;
-            background:
-                linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(11, 18, 32, 0.98)),
-                radial-gradient(circle at 30% 20%, rgba(56, 189, 248, 0.25), transparent 60%);
-            border: 1.5px solid rgba(56, 189, 248, 0.55);
+            border-radius: 50% 50% 45% 45%;
+            background: url('/robot_face.png') no-repeat center center / cover;
+            border: 2px solid rgba(56, 189, 248, 0.55);
             box-shadow:
                 0 0 40px rgba(56, 189, 248, 0.45),
                 0 20px 40px rgba(0, 0, 0, 0.5),
-                inset 0 0 30px rgba(56, 189, 248, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.25);
+                inset 0 0 30px rgba(56, 189, 248, 0.2);
             overflow: hidden;
         }
 
@@ -396,80 +400,9 @@ HTML_TEMPLATE = """
             top: 0; left: 0; right: 0;
             height: 40%;
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
-            border-radius: 26px 26px 50% 50%;
+            border-radius: 50% 50% 50% 50%;
             pointer-events: none;
-        }
-
-        /* خطوط تقنية على الرأس */
-        .robot-head-cube::after {
-            content: "";
-            position: absolute;
-            bottom: 12px; left: 12px; right: 12px;
-            height: 3px;
-            background: repeating-linear-gradient(90deg,
-                rgba(56, 189, 248, 0.9) 0 6px,
-                transparent 6px 12px);
-            border-radius: 3px;
-            opacity: 0.7;
-            box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
-        }
-
-        /* الأذنان الجانبيتان للروبوت */
-        .robot-ear {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 12px;
-            height: 30px;
-            border-radius: 6px;
-            background: linear-gradient(180deg, #1e293b, #0b1220);
-            border: 1px solid rgba(56, 189, 248, 0.5);
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.5), inset 0 0 6px rgba(56, 189, 248, 0.4);
-        }
-        .robot-ear.left  { left: -7px; }
-        .robot-ear.right { right: -7px; }
-        .robot-ear::after {
-            content: "";
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 4px; height: 4px;
-            border-radius: 50%;
-            background: #38bdf8;
-            box-shadow: 0 0 8px #38bdf8;
-            animation: earPulse 1.6s ease-in-out infinite;
-        }
-        @keyframes earPulse {
-            0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            50%      { opacity: 0.4; transform: translate(-50%, -50%) scale(1.4); }
-        }
-
-        /* الهوائي فوق الرأس */
-        .robot-antenna {
-            position: absolute;
-            top: -26px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 3px;
-            height: 26px;
-            background: linear-gradient(180deg, #38bdf8, #0b1220);
-            border-radius: 2px;
-            box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
-        }
-        .robot-antenna::before {
-            content: "";
-            position: absolute;
-            top: -7px; left: 50%;
-            transform: translateX(-50%);
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #67e8f9, #0284c7);
-            box-shadow: 0 0 14px #38bdf8, 0 0 24px #38bdf8;
-            animation: antennaGlow 1.4s ease-in-out infinite;
-        }
-        @keyframes antennaGlow {
-            0%, 100% { opacity: 1;   transform: translateX(-50%) scale(1); }
-            50%      { opacity: 0.6; transform: translateX(-50%) scale(1.25); }
+            z-index: 5;
         }
 
         /* الوجه (طبقة الأزرار والعيون) */
@@ -484,103 +417,80 @@ HTML_TEMPLATE = """
             padding: 20px 12px 12px;
             transform: translateZ(24px);
             transform-style: preserve-3d;
+            z-index: 10;
         }
 
-        /* العينان */
+        /* العينان - طبقات فوق الصورة */
         .robot-eyes-3d {
             display: flex;
-            gap: 22px;
-            transform: translateZ(10px);
+            gap: 30px;
+            position: absolute;
+            top: 42%;
+            left: 50%;
+            transform: translate(-50%, -50%) translateZ(10px);
+            width: 100px;
+            justify-content: space-between;
         }
         .eye-3d {
             position: relative;
-            width: 30px;
-            height: 30px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
-            background:
-                radial-gradient(circle at 50% 50%, #67e8f9 0%, #0ea5e9 35%, #0369a1 70%, #082f49 100%);
-            box-shadow:
-                0 0 18px #38bdf8,
-                0 0 32px rgba(56, 189, 248, 0.8),
-                inset 0 0 8px rgba(255, 255, 255, 0.7);
+            background: transparent;
             overflow: hidden;
-            animation: eyeBlink 4.5s infinite;
-            transition: transform 0.15s ease;
         }
-        /* بؤبؤ داخلي (يبدو كأنه يتحرك) */
+        /* جفن العين (يغلق ويفتح) */
         .eye-3d::before {
             content: "";
             position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 100%;
+            background: #dcdcdc; /* لون الجلد المعدني */
+            border-radius: 50% 50% 0 0;
+            transform-origin: top;
+            animation: eyeBlink 4.5s infinite;
+            z-index: 2;
+        }
+        /* بؤبؤ داخلي (يبدو كأنه يتحرك) */
+        .eye-3d::after {
+            content: "";
+            position: absolute;
             top: 50%; left: 50%;
-            width: 12px; height: 12px;
+            width: 14px; height: 14px;
             border-radius: 50%;
             background: radial-gradient(circle, #ffffff 0%, #a5f3fc 60%, transparent 100%);
             transform: translate(-50%, -50%);
             box-shadow: 0 0 12px #ffffff;
-            animation: pupilMove 3s ease-in-out infinite;
-        }
-        /* انعكاس ضوئي */
-        .eye-3d::after {
-            content: "";
-            position: absolute;
-            top: 5px; left: 7px;
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.9);
-            filter: blur(1px);
+            z-index: 1;
         }
 
-        @keyframes pupilMove {
-            0%, 100% { transform: translate(-50%, -50%); }
-            25%      { transform: translate(-40%, -50%); }
-            50%      { transform: translate(-50%, -40%); }
-            75%      { transform: translate(-60%, -50%); }
-        }
-
-        /* رمش العين – مع تأثير ثلاثي الأبعاد */
         @keyframes eyeBlink {
-            0%, 90%, 100% { transform: scaleY(1) translateZ(0); }
-            93%           { transform: scaleY(0.05) translateZ(0); }
-            96%           { transform: scaleY(1) translateZ(0); }
+            0%, 90%, 100% { transform: scaleY(0); }
+            93%           { transform: scaleY(1); }
+            96%           { transform: scaleY(0); }
         }
 
-        /* فم الروبوت */
+        /* فم الروبوت - طبقة فوق الصورة */
         .robot-mouth-3d {
-            position: relative;
-            width: 46px;
-            height: 8px;
-            border-radius: 4px;
-            background: linear-gradient(90deg, #38bdf8, #a855f7);
-            box-shadow:
-                0 0 12px #38bdf8,
-                0 0 24px rgba(56, 189, 248, 0.5),
-                inset 0 0 4px rgba(255, 255, 255, 0.8);
-            transition: height 0.08s ease, width 0.08s ease, transform 0.08s ease;
+            position: absolute;
+            top: 68%;
+            left: 50%;
+            transform: translate(-50%, -50%) translateZ(10px);
+            width: 30px;
+            height: 10px;
+            border-radius: 50%;
+            background: #1a1a1a; /* لون فتحة الفم */
+            overflow: hidden;
+            transition: height 0.1s ease;
         }
         .robot-mouth-3d.talking {
-            animation: mouthTalk3D 0.18s ease-in-out infinite alternate;
+            animation: mouthTalk3D 0.15s ease-in-out infinite alternate;
         }
         @keyframes mouthTalk3D {
-            0%   { height: 4px;  width: 30px; transform: translateZ(0); }
-            50%  { height: 14px; width: 48px; transform: translateZ(6px); }
-            100% { height: 6px;  width: 40px; transform: translateZ(0); }
+            0%   { height: 4px;  width: 20px; }
+            50%  { height: 16px; width: 34px; }
+            100% { height: 6px;  width: 24px; }
         }
-
-        /* الحاجبان */
-        .robot-brow {
-            position: absolute;
-            top: 34px;
-            width: 26px;
-            height: 4px;
-            border-radius: 3px;
-            background: linear-gradient(90deg, #38bdf8, #a855f7);
-            box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
-            transition: transform 0.2s ease;
-        }
-        .robot-brow.left  { left: 22px; transform: rotate(-8deg); }
-        .robot-brow.right { right: 22px; transform: rotate(8deg); }
-        .robot-head-3d.talking-head .robot-brow.left  { transform: rotate(-14deg) translateY(-3px); }
-        .robot-head-3d.talking-head .robot-brow.right { transform: rotate(14deg) translateY(-3px); }
 
         /* هالة دوران حول الرأس */
         .robot-avatar-wrapper {
@@ -594,7 +504,7 @@ HTML_TEMPLATE = """
         .robot-avatar-wrapper::before {
             content: "";
             position: absolute;
-            width: 200px; height: 200px;
+            width: 220px; height: 220px;
             border-radius: 50%;
             border: 1px solid rgba(56, 189, 248, 0.35);
             border-top-color: transparent;
@@ -605,7 +515,7 @@ HTML_TEMPLATE = """
         .robot-avatar-wrapper::after {
             content: "";
             position: absolute;
-            width: 230px; height: 230px;
+            width: 250px; height: 250px;
             border-radius: 50%;
             border: 1px dashed rgba(168, 85, 247, 0.3);
             animation: rotateRing 12s linear infinite reverse;
@@ -982,7 +892,7 @@ HTML_TEMPLATE = """
             <!-- Robot Card -->
             <div class="robot-main-card glass">
 
-                <!-- 🤖 رأس روبوت 3D جديد بالكامل -->
+                <!-- 🤖 رأس روبوت 3D الجديد بناءً على الصورة -->
                 <div class="robot-avatar-wrapper">
                     <div class="robot-status-ring">
                         <span class="robot-status-dot d1"></span>
@@ -994,21 +904,16 @@ HTML_TEMPLATE = """
                     <div class="robot-3d-stage">
                         <div class="robot-head-3d" id="robotHead3D">
                             <div class="robot-neck"></div>
-                            <div class="robot-antenna"></div>
 
                             <div class="robot-head-cube">
-                                <div class="robot-ear left"></div>
-                                <div class="robot-ear right"></div>
-
                                 <div class="robot-face-3d">
-                                    <span class="robot-brow left"></span>
-                                    <span class="robot-brow right"></span>
-
+                                    <!-- عيون فوق الصورة -->
                                     <div class="robot-eyes-3d">
                                         <div class="eye-3d"></div>
                                         <div class="eye-3d"></div>
                                     </div>
 
+                                    <!-- فم فوق الصورة -->
                                     <div class="robot-mouth-3d" id="robotMouth"></div>
                                 </div>
                             </div>

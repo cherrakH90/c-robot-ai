@@ -1,11 +1,22 @@
+# ============================================================
+# C ROBOT AI V5 - Cinematic Glass Edition
+# ملف شامل معدل ومنظم - جميع التعديلات المطلوبة
+# ============================================================
+
 import os
 import signal
 import subprocess
 
+# ============================================================
+# إعدادات المنفذ والبيئة
+# ============================================================
 PORT = 9000
 IS_VERCEL = os.environ.get('VERCEL') == '1'
 
-# تجاهل أمر lsof على Vercel تماماً
+
+# ============================================================
+# إيقاف أي خادم قديم على نفس المنفذ (يُتجاهل على Vercel)
+# ============================================================
 if not IS_VERCEL:
     try:
         command = f"lsof -t -i:{PORT}"
@@ -16,24 +27,16 @@ if not IS_VERCEL:
             os.kill(int(pid), signal.SIGKILL)
             print(f"تم إيقاف الخادم القديم على المنفذ {PORT} بنجاح.")
     except Exception:
-        passimport os
-import signal
-import subprocess
+        pass
 
-PORT = 9000
 
-try:
-    command = f"lsof -t -i:{PORT}"
-    pid = subprocess.check_output(command, shell=True).decode().strip()
-    if pid:
-        os.kill(int(pid), signal.SIGKILL)
-        print(f"تم إيقاف الخادم القديم على المنفذ {PORT} بنجاح.")
-except Exception:
-    pass
-
+# ============================================================
+# استيراد Flask
+# ============================================================
 from flask import Flask, render_template_string, send_from_directory
 
 app = Flask(__name__)
+
 
 # ============================================================
 # مسار خدمة خلفيات Bg_XX.jpg من جذر المشروع
@@ -44,6 +47,10 @@ def serve_bg(num):
         return send_from_directory('.', f'Bg_{num:02d}.jpg')
     return "Image not found", 404
 
+
+# ============================================================
+# قالب HTML الرئيسي الكامل
+# ============================================================
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" id="htmlRoot">
@@ -51,6 +58,8 @@ HTML_TEMPLATE = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>C ROBOT AI V5 - Cinematic Glass Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
         * {
@@ -152,8 +161,10 @@ HTML_TEMPLATE = """
             flex-direction: column;
             isolation: isolate;
 
-            /* ✅ خلفية Bg_01.jpg */
-            background: url('/Bg_01.jpg') no-repeat center center / cover;
+            /* ✅ خلفية Bg_01.jpg مع تدرج احتياطي */
+            background:
+                url('/Bg_01.jpg') no-repeat center center / cover,
+                linear-gradient(135deg, #0f172a, #1e293b);
         }
 
         /* طبقة تعتيم فوق الخلفية لتحسين القراءة */
@@ -324,11 +335,7 @@ HTML_TEMPLATE = """
         }
 
         /* ============================================================
-           🤖 التطوير: رأس روبوت 3D متحرك بالكامل
-           - منظور 3D perspective + preserve-3d
-           - رأس يتحرك (يمين/يسار/فوق/تحت/ميل)
-           - عينان ترمشان بشكل واقعي
-           - فم ينفتح ويغلق بتزامن مع الكلام
+           🤖 رأس روبوت 3D متحرك بالكامل
         ============================================================ */
         .robot-3d-stage {
             width: 100%;
@@ -349,7 +356,6 @@ HTML_TEMPLATE = """
             transform-origin: 50% 80%;
         }
 
-        /* حركة الرأس في وضع الخمول */
         @keyframes headIdle {
             0%   { transform: rotateY(0deg)   rotateX(0deg)   translateY(0); }
             15%  { transform: rotateY(-12deg) rotateX(3deg)   translateY(-2px); }
@@ -360,7 +366,6 @@ HTML_TEMPLATE = """
             100% { transform: rotateY(0deg)   rotateX(0deg)   translateY(0); }
         }
 
-        /* حالة "يتكلم" – حركة رأس أكثر حيوية */
         .robot-head-3d.talking-head {
             animation: headTalking 1.2s ease-in-out infinite;
         }
@@ -373,7 +378,6 @@ HTML_TEMPLATE = """
             100% { transform: rotateY(0deg)   rotateX(0deg)  translateY(0)    translateZ(0); }
         }
 
-        /* قاعدة العنق / الجسم */
         .robot-neck {
             position: absolute;
             bottom: -14px;
@@ -388,7 +392,6 @@ HTML_TEMPLATE = """
             z-index: -1;
         }
 
-        /* الرأس نفسه – مكعب 3D */
         .robot-head-cube {
             position: relative;
             width: 100%;
@@ -407,7 +410,6 @@ HTML_TEMPLATE = """
             overflow: hidden;
         }
 
-        /* لمعة زجاجية على الرأس */
         .robot-head-cube::before {
             content: "";
             position: absolute;
@@ -418,7 +420,6 @@ HTML_TEMPLATE = """
             pointer-events: none;
         }
 
-        /* خطوط تقنية على الرأس */
         .robot-head-cube::after {
             content: "";
             position: absolute;
@@ -432,7 +433,6 @@ HTML_TEMPLATE = """
             box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
         }
 
-        /* الأذنان الجانبيتان للروبوت */
         .robot-ear {
             position: absolute;
             top: 50%;
@@ -462,7 +462,6 @@ HTML_TEMPLATE = """
             50%      { opacity: 0.4; transform: translate(-50%, -50%) scale(1.4); }
         }
 
-        /* الهوائي فوق الرأس */
         .robot-antenna {
             position: absolute;
             top: -26px;
@@ -490,7 +489,6 @@ HTML_TEMPLATE = """
             50%      { opacity: 0.6; transform: translateX(-50%) scale(1.25); }
         }
 
-        /* الوجه (طبقة الأزرار والعيون) */
         .robot-face-3d {
             position: absolute;
             inset: 0;
@@ -504,7 +502,6 @@ HTML_TEMPLATE = """
             transform-style: preserve-3d;
         }
 
-        /* العينان */
         .robot-eyes-3d {
             display: flex;
             gap: 22px;
@@ -525,7 +522,6 @@ HTML_TEMPLATE = """
             animation: eyeBlink 4.5s infinite;
             transition: transform 0.15s ease;
         }
-        /* بؤبؤ داخلي (يبدو كأنه يتحرك) */
         .eye-3d::before {
             content: "";
             position: absolute;
@@ -537,7 +533,6 @@ HTML_TEMPLATE = """
             box-shadow: 0 0 12px #ffffff;
             animation: pupilMove 3s ease-in-out infinite;
         }
-        /* انعكاس ضوئي */
         .eye-3d::after {
             content: "";
             position: absolute;
@@ -555,14 +550,12 @@ HTML_TEMPLATE = """
             75%      { transform: translate(-60%, -50%); }
         }
 
-        /* رمش العين – مع تأثير ثلاثي الأبعاد */
         @keyframes eyeBlink {
             0%, 90%, 100% { transform: scaleY(1) translateZ(0); }
             93%           { transform: scaleY(0.05) translateZ(0); }
             96%           { transform: scaleY(1) translateZ(0); }
         }
 
-        /* فم الروبوت */
         .robot-mouth-3d {
             position: relative;
             width: 46px;
@@ -584,7 +577,6 @@ HTML_TEMPLATE = """
             100% { height: 6px;  width: 40px; transform: translateZ(0); }
         }
 
-        /* الحاجبان */
         .robot-brow {
             position: absolute;
             top: 34px;
@@ -600,7 +592,6 @@ HTML_TEMPLATE = """
         .robot-head-3d.talking-head .robot-brow.left  { transform: rotate(-14deg) translateY(-3px); }
         .robot-head-3d.talking-head .robot-brow.right { transform: rotate(14deg) translateY(-3px); }
 
-        /* هالة دوران حول الرأس */
         .robot-avatar-wrapper {
             position: relative;
             width: 100%;
@@ -634,7 +625,6 @@ HTML_TEMPLATE = """
             to   { transform: rotate(360deg); }
         }
 
-        /* مؤشرات الحالة الصغيرة حول الرأس */
         .robot-status-ring {
             position: absolute;
             inset: 0;
@@ -677,7 +667,6 @@ HTML_TEMPLATE = """
             50%      { opacity: 0.5; transform: scale(1.3); }
         }
 
-        /* Chat Panel */
         .chat-panel {
             width: 100%;
             background: rgba(0, 0, 0, 0.45);
@@ -700,7 +689,6 @@ HTML_TEMPLATE = """
         .msg-u { color: #cbd5e1; margin-bottom: 4px; }
         .msg-b { color: #38bdf8; font-weight: 500; }
 
-        /* Sound Wave */
         .sound-wave {
             display: flex;
             align-items: center;
@@ -725,7 +713,6 @@ HTML_TEMPLATE = """
             50%      { height: 18px; opacity: 1; }
         }
 
-        /* Talk Button */
         .talk-action-btn {
             width: 100%;
             padding: 14px;
@@ -767,7 +754,6 @@ HTML_TEMPLATE = """
                 inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
-        /* Quick Actions Row */
         .quick-actions {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -801,7 +787,6 @@ HTML_TEMPLATE = """
             font-weight: 600;
         }
 
-        /* Stats Row */
         .stats-row {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -835,7 +820,6 @@ HTML_TEMPLATE = """
             letter-spacing: 0.3px;
         }
 
-        /* Features Row */
         .features-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -871,7 +855,6 @@ HTML_TEMPLATE = """
             font-weight: 600;
         }
 
-        /* Capabilities List */
         .capabilities-list {
             padding: 12px 14px;
             display: flex;
@@ -893,7 +876,6 @@ HTML_TEMPLATE = """
             padding-bottom: 0;
         }
 
-        /* Bottom Nav */
         .bottom-nav-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -931,7 +913,6 @@ HTML_TEMPLATE = """
             font-weight: 600;
         }
 
-        /* Footer */
         .footer-note {
             text-align: center;
             font-size: 9.5px;
@@ -1330,7 +1311,26 @@ HTML_TEMPLATE = """
         }
 
         /* ============================================================
-           Responsive
+           Responsive - شاشات اللابتوب القصيرة
+        ============================================================ */
+        @media (max-height: 900px) and (min-width: 481px) {
+            html, body {
+                padding: 15px;
+                align-items: flex-start;
+            }
+            .iphone-frame {
+                width: 360px;
+                height: 720px;
+                animation: none;
+            }
+            .iphone-screen { border-radius: 40px; }
+            .robot-head-3d { width: 110px; height: 120px; }
+            .robot-avatar-wrapper::before { width: 160px; height: 160px; }
+            .robot-avatar-wrapper::after  { width: 185px; height: 185px; }
+        }
+
+        /* ============================================================
+           Responsive - الهواتف
         ============================================================ */
         @media (max-width: 480px) {
             body { padding: 0; background: #05070f; }
@@ -1346,6 +1346,14 @@ HTML_TEMPLATE = """
             .iphone-frame::after { display: none; }
             .iphone-screen { border-radius: 0; }
             .dynamic-island { top: 8px; height: 28px; width: 100px; }
+
+            /* تبسيط التأثيرات الثقيلة على الهواتف */
+            .glass, .chat-panel, .feature-box-v3, .stat-card, .nav-card,
+            .quick-btn, .solver-launch-btn {
+                backdrop-filter: blur(8px) !important;
+                -webkit-backdrop-filter: blur(8px) !important;
+            }
+            body::before, body::after { display: none; }
         }
     </style>
 </head>
@@ -1387,7 +1395,7 @@ HTML_TEMPLATE = """
             <!-- Robot Card -->
             <div class="robot-main-card glass">
 
-                <!-- 🤖 رأس روبوت 3D جديد بالكامل -->
+                <!-- 🤖 رأس روبوت 3D -->
                 <div class="robot-avatar-wrapper">
                     <div class="robot-status-ring">
                         <span class="robot-status-dot d1"></span>
@@ -1444,7 +1452,7 @@ HTML_TEMPLATE = """
                 </button>
             </div>
 
-            <!-- ✨ جديد: Quick Actions -->
+            <!-- ✨ Quick Actions -->
             <div class="quick-actions">
                 <div class="quick-btn" onclick="quickAction('weather')">
                     <div class="quick-icon">🌤️</div>
@@ -1460,7 +1468,7 @@ HTML_TEMPLATE = """
                 </div>
             </div>
 
-            <!-- ✨ جديد: Stats Row -->
+            <!-- ✨ Stats Row -->
             <div class="stats-row">
                 <div class="stat-card">
                     <div class="stat-value" id="statUsers">1,247</div>
@@ -1536,7 +1544,7 @@ HTML_TEMPLATE = """
             </div>
 
             <!-- ============================================================
-                 🧠 قسم محلل المشكلات الذكي (Problem Solver)
+                 🧠 محلل المشكلات الذكي (Problem Solver)
             ============================================================ -->
             <button class="solver-launch-btn" id="solverLaunchBtn" onclick="toggleProblemSolver()">
                 🧠 محلل المشكلات الذكي - اطرح مشكلتك الحقيقية
@@ -1583,10 +1591,7 @@ HTML_TEMPLATE = """
     let currentLang = 'ar';
 
     /* ============================================================
-       🎛️ محرك الصوت الروبوتي 100%
-       - AudioContext لتوليد نغمات روبوتية
-       - SpeechSynthesis بنبرة إنجليزية روبوتية (pitch منخفض جداً)
-       - فلترة + ring modulation لمحاكاة صوت الروبوت
+       🎛️ محرك الصوت الروبوتي
     ============================================================ */
     let audioCtx = null;
     function getAudioCtx() {
@@ -1603,7 +1608,6 @@ HTML_TEMPLATE = """
         return audioCtx;
     }
 
-    /* نغمة روبوتية قصيرة (beep) قبل / بعد الكلام */
     function playRobotBeep(freq = 880, duration = 0.08, type = 'square', gain = 0.06) {
         const ctx = getAudioCtx();
         if (!ctx) return;
@@ -1620,7 +1624,6 @@ HTML_TEMPLATE = """
         osc.stop(ctx.currentTime + duration + 0.02);
     }
 
-    /* سلسلة نغمات "تشغيل/معالجة" روبوتية */
     function playRobotProcessing() {
         playRobotBeep(1200, 0.05, 'square', 0.05);
         setTimeout(() => playRobotBeep(900, 0.05, 'square', 0.05), 70);
@@ -1628,14 +1631,13 @@ HTML_TEMPLATE = """
     }
 
     /* ============================================================
-       🗣️ محرك الكلام الروبوتي (إنجليزي 100% بنبرة روبوتية)
+       🗣️ محرك الكلام الروبوتي (إنجليزي 100%)
     ============================================================ */
     function pickRoboticEnglishVoice() {
         if (!('speechSynthesis' in window)) return null;
         const voices = window.speechSynthesis.getVoices();
         if (!voices || !voices.length) return null;
 
-        // نبحث عن أفضل صوت إنجليزي روبوتي / ذكوري منخفض
         const preferred = [
             /Google UK English Male/i,
             /Microsoft (David|Mark|George)/i,
@@ -1658,14 +1660,11 @@ HTML_TEMPLATE = """
         return v || null;
     }
 
-    // إعادة تحميل الأصوات عند توفرها
     if ('speechSynthesis' in window) {
         window.speechSynthesis.onvoiceschanged = () => { getEnglishVoice(); };
-        // بعض المتصفحات تحتاج استدعاء مسبق
         window.speechSynthesis.getVoices();
     }
 
-    /* تشغيل صوت روبوتي إنجليزي حقيقي 100% */
     function speakRobotEnglish(text) {
         const chatBox = document.getElementById('chatBox');
         chatBox.innerHTML += `<div class="msg-b">🤖 ${text}</div>`;
@@ -1674,11 +1673,9 @@ HTML_TEMPLATE = """
         const head  = document.getElementById('robotHead3D');
         const mouth = document.getElementById('robotMouth');
 
-        // حركة الرأس والفم
         head.classList.add('talking-head');
         mouth.classList.add('talking');
 
-        // نغمة تحضير روبوتية قبل الكلام
         playRobotProcessing();
 
         const stopAnim = () => {
@@ -1693,18 +1690,15 @@ HTML_TEMPLATE = """
             const v = getEnglishVoice();
             if (v) utter.voice = v;
 
-            // 🇬🇧 إنجليزي 100% بنبرة روبوتية
             utter.lang  = 'en-US';
-            utter.pitch = 0.05;   // منخفض جداً => نبرة روبوتية عميقة
-            utter.rate  = 0.82;   // أبطأ قليلاً => إحساس آلي
+            utter.pitch = 0.05;
+            utter.rate  = 0.82;
             utter.volume = 1.0;
 
-            // نغمة "بدء الإرسال" روبوتية عند بداية الكلام
             utter.onstart = () => {
                 playRobotBeep(1500, 0.06, 'square', 0.05);
             };
 
-            // نبضات روبوتية أثناء الكلام (كل 260ms)
             let pulseTimer = null;
             const startPulses = () => {
                 pulseTimer = setInterval(() => {
@@ -1728,7 +1722,6 @@ HTML_TEMPLATE = """
 
             window.speechSynthesis.speak(utter);
         } else {
-            // fallback: إيقاف الحركة بعد مدة تقديرية
             setTimeout(stopAnim, Math.max(1500, text.length * 60));
         }
     }
@@ -1810,7 +1803,6 @@ HTML_TEMPLATE = """
         speak(t.speechWelcome);
     }
 
-    /* المحرك الرئيسي للكلام – يستخدم الصوت الروبوتي الإنجليزي */
     function speak(text) {
         speakRobotEnglish(text);
     }
@@ -1820,7 +1812,6 @@ HTML_TEMPLATE = """
         speak(msg);
     }
 
-    // ✨ جديد: إجراءات سريعة
     function quickAction(action) {
         const responses = {
             ar: {
@@ -1859,7 +1850,6 @@ HTML_TEMPLATE = """
         speak(responses[currentLang][action]);
     }
 
-    // ✨ تأثير تحديث الأرقام في الإحصائيات
     function animateStats() {
         const users = document.getElementById('statUsers');
         const chats = document.getElementById('statChats');
@@ -1875,15 +1865,12 @@ HTML_TEMPLATE = """
     animateStats();
 
     /* ============================================================
-       🤖 تحسينات إضافية لرأس الروبوت 3D
-       - حركة رأس عشوائية خفيفة حتى بدون كلام
-       - تفاعل العينين مع المؤشر / اللمس
+       🤖 تحسينات رأس الروبوت 3D
     ============================================================ */
     (function robotHeadEnhancements() {
         const head = document.getElementById('robotHead3D');
         if (!head) return;
 
-        // نبضة رأس عشوائية كل فترة لإحياء الروبوت
         setInterval(() => {
             if (head.classList.contains('talking-head')) return;
             const rx = (Math.random() * 6 - 3).toFixed(2);
@@ -1895,7 +1882,6 @@ HTML_TEMPLATE = """
             }, 1200);
         }, 5500);
 
-        // تفاعل العينين مع حركة المؤشر (تتبع بسيط)
         document.addEventListener('mousemove', (e) => {
             const pupils = document.querySelectorAll('.eye-3d');
             if (!pupils.length) return;
@@ -1909,19 +1895,12 @@ HTML_TEMPLATE = """
         });
     })();
 
-    /* تسخين محرك الصوت عند أول تفاعل من المستخدم */
     document.addEventListener('click', () => { getAudioCtx(); }, { once: true });
     document.addEventListener('touchstart', () => { getAudioCtx(); }, { once: true });
 
     /* ============================================================
        🧠🧠🧠 محرك حل المشكلات الذكي المتقدم (Problem Solver Engine)
-       ============================================================
-       يستقبل مشكلة حقيقية -> يحللها -> يحدد السبب -> يقترح حلول ->
-       يبني خطة عمل -> ينفذ خطوات رقمية -> يقيس النتائج ->
-       يعيد الاستراتيجية عند الفشل
     ============================================================ */
-
-    /* قاعدة معرفة المشكلات حسب التصنيف */
     const PROBLEM_KNOWLEDGE_BASE = {
         business_marketing: {
             name: "مشكلة تجارية / تسويقية",
@@ -1967,7 +1946,7 @@ HTML_TEMPLATE = """
         },
         technical: {
             name: "مشكلة تقنية / برمجية",
-            keywords: ['خطأ','error','bug','برنامج','كود','تطبيق','موقع','سيرفر','سيرفر','شبكة','انترنت','هاتف','جهاز','ويندوز','لينكس','ماك','تحميل','تثبيت','تحديث','data','داتا'],
+            keywords: ['خطأ','error','bug','برنامج','كود','تطبيق','موقع','سيرفر','شبكة','انترنت','هاتف','جهاز','ويندوز','لينكس','ماك','تحميل','تثبيت','تحديث','data','داتا'],
             causes: [
                 "تعارض في الإصدارات أو المكتبات المستخدمة",
                 "إعدادات غير صحيحة في البيئة أو الملفات",
@@ -2045,7 +2024,7 @@ HTML_TEMPLATE = """
         },
         health_lifestyle: {
             name: "مشكلة صحية / نمط حياة",
-            keywords: ['وزن','سمنة','نحافة','رياضة','تغذية','نوم','صحة','مرض','تعب','إرهاق','طاقة','رياضة','جيم','دايت'],
+            keywords: ['وزن','سمنة','نحافة','رياضة','تغذية','نوم','صحة','مرض','تعب','إرهاق','طاقة','جيم','دايت'],
             causes: [
                 "نمط غذائي غير متوازن + سكريات خفية",
                 "قلة النشاط البدني اليومي",
@@ -2217,7 +2196,7 @@ HTML_TEMPLATE = """
         }
     }
 
-    /* 🎤 تسجيل صوتي بالعربي */
+    /* 🎤 تسجيل صوتي */
     function startListening() {
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         const btn = document.getElementById('voiceBtn');
@@ -2302,7 +2281,6 @@ HTML_TEMPLATE = """
         return best;
     }
 
-    /* إضافة مرحلة تحليل */
     function addStage(icon, title, detail, delay = 0) {
         return new Promise(resolve => {
             setTimeout(() => {
@@ -2323,7 +2301,6 @@ HTML_TEMPLATE = """
         });
     }
 
-    /* المحلل الرئيسي */
     async function analyzeProblem() {
         const input = document.getElementById('problemInput').value.trim();
         if (!input) {
@@ -2335,46 +2312,36 @@ HTML_TEMPLATE = """
         executionDone = false;
         retryCount = 0;
 
-        // إعادة تعيين الواجهة
         document.getElementById('analysisStages').innerHTML = '';
         document.getElementById('planContainer').innerHTML = '';
         document.getElementById('execContainer').innerHTML = '';
         document.getElementById('resultsContainer').innerHTML = '';
 
-        // تصنيف المشكلة
         const categoryKey = classifyProblem(input);
         const category = PROBLEM_KNOWLEDGE_BASE[categoryKey];
 
         playRobotProcessing();
         speak("Analyzing your problem. Please wait.");
 
-        // المرحلة 1: استقبال
         await addStage('🎤', 'استقبال المشكلة', `تم استقبال مشكلتك: "${input.substring(0, 80)}${input.length > 80 ? '...' : ''}"`, 100);
         await new Promise(r => setTimeout(r, 500));
 
-        // المرحلة 2: التحليل
         await addStage('🤖', 'التحليل بالذكاء الاصطناعي', `تم تصنيف المشكلة كـ: <b style="color:#a855f7;">${category.name}</b>`, 200);
         await new Promise(r => setTimeout(r, 600));
 
-        // المرحلة 3: السبب
         await addStage('🔍', 'تحديد السبب الجذري', `تم تحديد ${category.causes.length} أسباب محتملة — السبب الأقوى: "${category.causes[0]}"`, 200);
         await new Promise(r => setTimeout(r, 600));
 
-        // المرحلة 4: الحلول
         await addStage('🧠', 'اقتراح الحلول', `تم توليد ${category.solutions.length} حلول متعددة قابلة للتنفيذ`, 200);
         await new Promise(r => setTimeout(r, 500));
 
-        // المرحلة 5: خطة العمل
         await addStage('📋', 'بناء خطة العمل', `خطة عمل من ${category.weekly_plan.length} أيام + ${category.digital_steps.length} خطوة رقمية قابلة للتنفيذ`, 200);
 
-        // حفظ التحليل
         currentAnalysis = { categoryKey, category };
 
-        // عرض خطة العمل الكاملة
         setTimeout(() => renderFullPlan(category), 500);
     }
 
-    /* عرض الخطة الكاملة */
     function renderFullPlan(category) {
         const container = document.getElementById('planContainer');
         container.innerHTML = `
@@ -2424,7 +2391,6 @@ HTML_TEMPLATE = """
         speak("The plan is ready. I have prepared the root causes, solutions, and a full weekly action plan. You can now execute the digital steps.");
     }
 
-    /* تنفيذ الخطوات الرقمية */
     function executeDigitalSteps() {
         if (!currentAnalysis) return;
         const category = currentAnalysis.category;
@@ -2454,9 +2420,7 @@ HTML_TEMPLATE = """
         }, 1200);
     }
 
-    /* توليد محتوى رقمي حسب النوع */
     function generateDigitalContent(type, category) {
-        const isBusiness = category.name.includes('تجاري');
         switch (type) {
             case 'posts':
                 return `المنشور 1: "هل تبحث عن [المنتج]؟ عندنا العرض الأفضل في المنطقة 🔥 خصم 20% لأول 10 عملاء هذا الأسبوع فقط!"\nالمنشور 2: "قصة نجاح: عميلنا [الاسم] حقق [النتيجة] في أسبوعين. جربنا واحكم بنفسك ✨"\nالمنشور 3: "خلف الكواليس: كيف نجهز [الخدمة] بجودة عالية 🎬"\nالمنشور 4: "سؤال مهم: ما الذي يهمك أكثر عند اختيار [المنتج]؟ شاركنا في التعليقات 💬"\nالمنشور 5: "عرض محدود: اشتر اليوم واحصل على [الهدية] مجاناً 🎁"`;
@@ -2507,7 +2471,6 @@ HTML_TEMPLATE = """
         }
     }
 
-    /* قياس النتائج */
     function measureResults() {
         if (!currentAnalysis) return;
         const category = currentAnalysis.category;
@@ -2556,7 +2519,6 @@ HTML_TEMPLATE = """
         }
     }
 
-    /* استراتيجية بديلة */
     function retryWithAltStrategy() {
         if (!currentAnalysis) return;
         const category = currentAnalysis.category;
@@ -2595,7 +2557,6 @@ HTML_TEMPLATE = """
         speak("Alternative strategy ready. Review the new plan and execute when ready.");
     }
 
-    /* مضاعفة ما نجح */
     function doubleDown() {
         playRobotProcessing();
         speak("Excellent. Doubling down on what worked. Scaling up all successful channels and content.");
@@ -2613,7 +2574,6 @@ HTML_TEMPLATE = """
         `;
     }
 
-    /* تسخين محرك الصوت عند أول تفاعل من المستخدم */
     document.addEventListener('click', () => { getAudioCtx(); }, { once: true });
     document.addEventListener('touchstart', () => { getAudioCtx(); }, { once: true });
 </script>
@@ -2621,10 +2581,18 @@ HTML_TEMPLATE = """
 </html>
 """
 
+
+# ============================================================
+# المسار الرئيسي
+# ============================================================
 @app.route('/')
 def home():
     return render_template_string(HTML_TEMPLATE)
 
+
+# ============================================================
+# نقطة تشغيل التطبيق
+# ============================================================
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', PORT))
     app.run(host='0.0.0.0', port=port, debug=True)

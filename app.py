@@ -155,6 +155,192 @@ def service_worker():
 
 
 # ============================================================
+# 🧠 محرك حل المشكلات العملية (Problem Solving Engine)
+# ============================================================
+PROBLEM_KNOWLEDGE_BASE = {
+    "marketing": {
+        "keywords": ["زبائن", "زبون", "عملاء", "عميل", "محل", "متجر", "تسويق", "مبيعات", "بيزنس", "مشروع",
+                     "customers", "clients", "shop", "store", "marketing", "sales", "business"],
+        "cause_ar": "ضعف الوصول للعملاء المحتملين + غياب هوية تجارية واضحة + عدم وجود قنوات تواصل فعّالة.",
+        "cause_en": "Weak reach to potential customers + missing brand identity + no active communication channels.",
+        "solutions_ar": [
+            "تحديد الجمهور المستهدف بدقة (العمر، المنطقة، الاهتمام، القدرة الشرائية).",
+            "بناء عرض قيمة واضح (Offer) يميزك عن المنافسين.",
+            "إنشاء هوية بصرية موحّدة (شعار، ألوان، نبرة صوت).",
+            "فتح قنوات تواصل: واتساب بزنس + إنستغرام + خرائط جوجل (Google My Business).",
+            "حملة إعلانية محلية صغيرة الميزانية (Meta Ads أو Google Ads).",
+            "برنامج إحالة: عميل يجلب عميل بمكافأة."
+        ],
+        "solutions_en": [
+            "Precisely define target audience (age, area, interest, purchasing power).",
+            "Build a clear unique value offer.",
+            "Create a unified visual identity (logo, colors, tone).",
+            "Open channels: WhatsApp Business + Instagram + Google My Business.",
+            "Small budget local ads campaign (Meta Ads or Google Ads).",
+            "Referral program: customer brings customer with reward."
+        ],
+        "plan_ar": [
+            {"step": "اليوم 1-2", "task": "تحديد الجمهور المستهدف وكتابة بروفايل العميل المثالي."},
+            {"step": "اليوم 3-4", "task": "تصميم عرض قيمة + شعار مؤقت + صفحة واتساب بزنس."},
+            {"step": "اليوم 5-6", "task": "إنشاء حساب إنستغرام + Google My Business ونشر أول 3 منشورات."},
+            {"step": "اليوم 7",   "task": "إطلاق أول حملة إعلانية بميزانية صغيرة (5$ يومياً)."},
+            {"step": "أسبوع 2",   "task": "نشر 5 منشورات أسبوعياً + الرد على كل رسالة خلال ساعة."},
+            {"step": "أسبوع 3-4", "task": "قياس النتائج: عدد الرسائل، التحويلات، والتكلفة لكل عميل."}
+        ],
+        "plan_en": [
+            {"step": "Day 1-2", "task": "Define target audience and write ideal customer profile."},
+            {"step": "Day 3-4", "task": "Design value offer + temporary logo + WhatsApp Business page."},
+            {"step": "Day 5-6", "task": "Create Instagram + Google My Business, publish first 3 posts."},
+            {"step": "Day 7",   "task": "Launch first small ad campaign ($5/day)."},
+            {"step": "Week 2",  "task": "Post 5 times weekly + reply to every message within 1 hour."},
+            {"step": "Week 3-4","task": "Measure results: messages, conversions, cost per customer."}
+        ],
+        "kpis_ar": ["عدد الرسائل الجديدة أسبوعياً", "نسبة التحويل من رسالة إلى شراء", "تكلفة اكتساب العميل (CAC)", "متوسط قيمة الطلب"],
+        "kpis_en": ["New messages per week", "Message-to-purchase conversion rate", "Customer acquisition cost (CAC)", "Average order value"],
+        "fallback_ar": "إذا لم تنجح الحملة الإعلانية خلال أسبوعين، جرّب: (1) إعلانات على TikTok، (2) التعاون مع مؤثر محلي، (3) عروض حصرية عبر واتساب للعملاء الحاليين.",
+        "fallback_en": "If the ad campaign fails in 2 weeks, try: (1) TikTok ads, (2) local influencer collab, (3) exclusive WhatsApp offers to existing customers."
+    },
+    "productivity": {
+        "keywords": ["وقت", "إنتاجية", "تنظيم", "تأجيل", "تسويف", "مهام", "مشغول", "إدارة",
+                     "time", "productivity", "organize", "procrastination", "tasks", "busy", "management"],
+        "cause_ar": "غياب نظام أولويات + تشتت رقمي + عدم وجود مراجعة أسبوعية.",
+        "cause_en": "Missing priority system + digital distraction + no weekly review.",
+        "solutions_ar": [
+            "تطبيق قاعدة 1-3-5 (مهمة كبيرة + 3 متوسطة + 5 صغيرة).",
+            "استخدام تقنية بومودورو (25 دقيقة عمل + 5 راحة).",
+            "حجب الإشعارات أثناء جلسات التركيز.",
+            "مراجعة أسبوعية كل جمعة لتصفية المهام.",
+            "تخصيص صباح بلا هاتف لأول 30 دقيقة."
+        ],
+        "solutions_en": [
+            "Apply 1-3-5 rule (1 big + 3 medium + 5 small tasks).",
+            "Use Pomodoro (25 min work + 5 min break).",
+            "Block notifications during focus sessions.",
+            "Weekly review every Friday to clean tasks.",
+            "Phone-free mornings for first 30 minutes."
+        ],
+        "plan_ar": [
+            {"step": "اليوم 1", "task": "كتابة كل المهام الحالية وتصنيفها حسب الأهمية."},
+            {"step": "اليوم 2", "task": "تطبيق قاعدة 1-3-5 ليوم واحد فقط كتجربة."},
+            {"step": "اليوم 3-5", "task": "تفعيل 4 جلسات بومودورو يومياً."},
+            {"step": "اليوم 6-7", "task": "مراجعة أسبوعية وحذف ما لم يُنفذ بدون سبب."}
+        ],
+        "plan_en": [
+            {"step": "Day 1", "task": "List all tasks and rank by importance."},
+            {"step": "Day 2", "task": "Apply 1-3-5 rule for one day only as test."},
+            {"step": "Day 3-5", "task": "Run 4 Pomodoro sessions daily."},
+            {"step": "Day 6-7", "task": "Weekly review and delete what wasn't done without reason."}
+        ],
+        "kpis_ar": ["عدد المهام المنجزة يومياً", "ساعات التركيز الفعلي", "نسبة الالتزام بالخطة"],
+        "kpis_en": ["Tasks completed daily", "Actual focus hours", "Plan adherence rate"],
+        "fallback_ar": "إذا لم تتحسن الإنتاجية، قلل المهام إلى 3 يومياً فقط وركّز على الأهم.",
+        "fallback_en": "If productivity doesn't improve, reduce tasks to 3 per day and focus on the most important."
+    },
+    "learning": {
+        "keywords": ["تعلم", "دراسة", "مذاكرة", "امتحان", "دورة", "لغة", "مهارة",
+                     "learn", "study", "exam", "course", "language", "skill"],
+        "cause_ar": "غياب منهجية تعلم فعّالة + عدم تطبيق المعلومة + تشتت بين مصادر كثيرة.",
+        "cause_en": "Missing effective learning method + no information application + distraction across many sources.",
+        "solutions_ar": [
+            "استخدام تقنية فاينمان: اشرح ما تعلمته بصوت عالٍ كأنك تدرّس طفلاً.",
+            "التعلم بالمشروع: طبق كل درس بمشروع صغير فوراً.",
+            "اختيار مصدر واحد رئيسي وإتمامه قبل الانتقال لغيره.",
+            "جلسات تعلم 50 دقيقة + راحة 10 دقائق.",
+            "اختبار ذاتي أسبوعي."
+        ],
+        "solutions_en": [
+            "Use Feynman technique: explain out loud as if teaching a child.",
+            "Project-based learning: apply each lesson immediately.",
+            "Pick one main source and finish it before switching.",
+            "50-min sessions + 10-min breaks.",
+            "Weekly self-testing."
+        ],
+        "plan_ar": [
+            {"step": "اليوم 1", "task": "اختيار مصدر واحد فقط والتخلص من الباقي مؤقتاً."},
+            {"step": "اليوم 2-7", "task": "جلسة يومية 50 دقيقة + تلخيص بصوت عالٍ."},
+            {"step": "الأسبوع 2", "task": "بناء مشروع صغير يطبق ما تعلمته."},
+            {"step": "الأسبوع 3-4", "task": "اختبار أسبوعي ذاتي وتعديل الخطة."}
+        ],
+        "plan_en": [
+            {"step": "Day 1", "task": "Choose one source only, pause everything else."},
+            {"step": "Day 2-7", "task": "Daily 50-min session + out-loud summary."},
+            {"step": "Week 2", "task": "Build a small project applying what you learned."},
+            {"step": "Week 3-4", "task": "Weekly self-test and adjust plan."}
+        ],
+        "kpis_ar": ["ساعات التعلم الفعلية", "عدد المشاريع المنجزة", "نتائج الاختبار الذاتي"],
+        "kpis_en": ["Actual learning hours", "Projects completed", "Self-test results"],
+        "fallback_ar": "إذا لم تستوعب، غيّر أسلوب الشرح (فيديو بدل نص) وخذ استراحة يوم كامل.",
+        "fallback_en": "If you're not absorbing, switch explanation style (video over text) and take a full-day break."
+    }
+}
+
+
+def analyze_problem(message):
+    """تحليل المشكلة وتحديد المجال"""
+    text = (message or "").lower()
+    scores = {}
+    for domain, data in PROBLEM_KNOWLEDGE_BASE.items():
+        scores[domain] = sum(1 for kw in data["keywords"] if kw.lower() in text)
+    best_domain = max(scores, key=scores.get)
+    if scores[best_domain] == 0:
+        best_domain = "marketing"  # default عملي
+    return best_domain, PROBLEM_KNOWLEDGE_BASE[best_domain]
+
+
+def build_solution_plan(message, lang='ar'):
+    """بناء خطة حل كاملة خطوة بخطوة"""
+    domain, data = analyze_problem(message)
+    is_ar = (lang == 'ar')
+    return {
+        "domain": domain,
+        "problem": message,
+        "cause": data["cause_ar"] if is_ar else data["cause_en"],
+        "solutions": data["solutions_ar"] if is_ar else data["solutions_en"],
+        "plan": data["plan_ar"] if is_ar else data["plan_en"],
+        "kpis": data["kpis_ar"] if is_ar else data["kpis_en"],
+        "fallback": data["fallback_ar"] if is_ar else data["fallback_en"]
+    }
+
+
+# ============================================================
+# 🧩 نقطة نهاية حل المشكلات العملية
+# ============================================================
+@app.route('/api/solve', methods=['POST'])
+def api_solve():
+    data = request.get_json(silent=True) or {}
+    problem = (data.get('problem') or '').strip()
+    lang = data.get('lang', 'ar')
+
+    if not problem:
+        return jsonify({
+            "error": "Please provide a problem.",
+            "error_ar": "الرجاء إرسال مشكلة لحلها."
+        }), 400
+
+    plan = build_solution_plan(problem, lang)
+
+    if lang == 'ar':
+        summary = (
+            f"حللت مشكلتك: «{problem}»\n"
+            f"🔍 السبب الجذري: {plan['cause']}\n"
+            f"🧠 تم اقتراح {len(plan['solutions'])} حلول، "
+            f"وتحويلها إلى خطة من {len(plan['plan'])} خطوات "
+            f"مع {len(plan['kpis'])} مؤشرات قياس."
+        )
+    else:
+        summary = (
+            f"I analyzed your problem: \"{problem}\"\n"
+            f"🔍 Root cause: {plan['cause']}\n"
+            f"🧠 Suggested {len(plan['solutions'])} solutions, "
+            f"converted to a {len(plan['plan'])}-step plan "
+            f"with {len(plan['kpis'])} KPIs."
+        )
+
+    plan["summary"] = summary
+    return jsonify(plan)
+
+
+# ============================================================
 # 🤖 نقطة نهاية API جاهزة للربط بـ OpenAI / Gemini
 # ============================================================
 @app.route('/api/chat', methods=['POST'])
@@ -1006,6 +1192,188 @@ HTML_TEMPLATE = """
         .sys-info-strip .ok { color: #22c55e; }
         .sys-info-strip .warn { color: #f59e0b; }
 
+        /* ============================================================
+           🧠 لوحة حل المشكلات الجديدة
+        ============================================================ */
+        .solver-panel {
+            padding: 14px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .solver-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+        }
+        .solver-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .solver-title::before {
+            content: "🧠";
+            filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.7));
+        }
+        .solver-badge {
+            font-size: 8.5px;
+            color: #a855f7;
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+        .problem-input {
+            width: 100%;
+            min-height: 52px;
+            max-height: 90px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #e2e8f0;
+            font-size: 11px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            font-family: 'Tajawal', sans-serif;
+            transition: border 0.3s ease;
+        }
+        .problem-input:focus {
+            border-color: rgba(56, 189, 248, 0.8);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+        }
+        .problem-input::placeholder {
+            color: #64748b;
+            font-size: 10.5px;
+        }
+        .solve-btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 14px;
+            background: linear-gradient(135deg,
+                rgba(168, 85, 247, 0.9),
+                rgba(236, 72, 153, 0.85),
+                rgba(14, 165, 233, 0.85));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 6px 22px rgba(168, 85, 247, 0.45),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+            transition: all 0.3s ease;
+        }
+        .solve-btn:active { transform: scale(0.97); }
+        .solve-btn.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        .solve-result {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 4px;
+            animation: slideUp 0.4s ease;
+        }
+        .solve-result.visible { display: flex; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .solve-block {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+        .solve-block-title {
+            font-size: 10px;
+            color: #38bdf8;
+            font-weight: 800;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .solve-block.cause .solve-block-title { color: #f59e0b; }
+        .solve-block.solutions .solve-block-title { color: #a855f7; }
+        .solve-block.plan .solve-block-title { color: #22c55e; }
+        .solve-block.kpis .solve-block-title { color: #ec4899; }
+        .solve-block.fallback .solve-block-title { color: #ef4444; }
+
+        .solve-block ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .solve-block li {
+            font-size: 10.5px;
+            color: #cbd5e1;
+            line-height: 1.55;
+            padding-right: 14px;
+            position: relative;
+        }
+        .solve-block li::before {
+            content: "▸";
+            position: absolute;
+            right: 0;
+            color: #38bdf8;
+            font-weight: 900;
+        }
+        .solve-block.plan li::before { content: "✓"; color: #22c55e; }
+        .solve-block.kpis li::before { content: "📊"; font-size: 8px; }
+        .solve-block.fallback li::before { content: "⚠"; color: #ef4444; }
+
+        .plan-step {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            padding: 6px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+        }
+        .plan-step:last-child { border-bottom: none; }
+        .plan-step-label {
+            font-size: 9px;
+            color: #22c55e;
+            font-weight: 800;
+            background: rgba(34, 197, 94, 0.15);
+            padding: 2px 6px;
+            border-radius: 6px;
+            white-space: nowrap;
+            min-width: 55px;
+            text-align: center;
+        }
+        .plan-step-task {
+            font-size: 10.5px;
+            color: #e2e8f0;
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        .solve-status {
+            font-size: 9.5px;
+            color: #94a3b8;
+            text-align: center;
+            padding: 4px;
+            font-style: italic;
+        }
+        .solve-status.done { color: #22c55e; }
+        .solve-status.error { color: #ef4444; }
+
         @media (max-width: 480px) {
             body { padding: 0; background: #05070f; }
             .iphone-frame {
@@ -1104,6 +1472,56 @@ HTML_TEMPLATE = """
                 <button class="talk-action-btn" id="talkBtn" onclick="triggerTalk()">
                     🎙️ تحدث مع C ROBOT AI
                 </button>
+            </div>
+
+            <!-- 🧠 لوحة حل المشكلات العملية -->
+            <div class="solver-panel glass" id="solverPanel">
+                <div class="solver-head">
+                    <div class="solver-title" id="solverTitle">حلّال المشكلات العملية</div>
+                    <div class="solver-badge">AI Solver</div>
+                </div>
+
+                <textarea
+                    id="problemInput"
+                    class="problem-input"
+                    placeholder="اكتب مشكلتك الحقيقية… مثال: عندي محل ولا أملك زبائن كفاية."></textarea>
+
+                <button class="solve-btn" id="solveBtn" onclick="solveProblem()">
+                    🧠 حلّل المشكلة وابنِ خطة عمل
+                </button>
+
+                <div class="solve-status" id="solveStatus"></div>
+
+                <div class="solve-result" id="solveResult">
+                    <div class="solve-block cause" id="blockCause">
+                        <div class="solve-block-title" id="titleCause">🔍 السبب الجذري</div>
+                        <div id="causeText" style="font-size:10.5px;color:#cbd5e1;line-height:1.55;"></div>
+                    </div>
+
+                    <div class="solve-block solutions" id="blockSolutions">
+                        <div class="solve-block-title" id="titleSolutions">🧠 الحلول المقترحة</div>
+                        <ul id="solutionsList"></ul>
+                    </div>
+
+                    <div class="solve-block plan" id="blockPlan">
+                        <div class="solve-block-title" id="titlePlan">📋 خطة العمل</div>
+                        <div id="planList"></div>
+                    </div>
+
+                    <div class="solve-block kpis" id="blockKpis">
+                        <div class="solve-block-title" id="titleKpis">📊 مؤشرات القياس</div>
+                        <ul id="kpisList"></ul>
+                    </div>
+
+                    <div class="solve-block fallback" id="blockFallback">
+                        <div class="solve-block-title" id="titleFallback">🔄 خطة بديلة عند الفشل</div>
+                        <div id="fallbackText" style="font-size:10.5px;color:#cbd5e1;line-height:1.55;"></div>
+                    </div>
+
+                    <button class="solve-btn" style="background:linear-gradient(135deg,rgba(14,165,233,0.9),rgba(168,85,247,0.85));" onclick="speakSolutionSummary()">
+                        🔊 اسمع الملخص الصوتي
+                    </button>
+                </div>
             </div>
 
             <!-- 📊 شريط معلومات النظام الحية -->
@@ -1214,6 +1632,7 @@ HTML_TEMPLATE = """
     let recognition = null;
     let isListening = false;
     let isSpeaking = false;
+    let lastSolution = null;
 
     /* ============================================================
        🎛️ محرك الصوت الروبوتي (مع Web Audio Filters)
@@ -1469,6 +1888,135 @@ HTML_TEMPLATE = """
     }
 
     /* ============================================================
+       🧠 حلّال المشكلات — يربط بالـ /api/solve
+    ============================================================ */
+    async function solveProblem() {
+        const input = document.getElementById('problemInput');
+        const problem = (input.value || '').trim();
+        const statusEl = document.getElementById('solveStatus');
+        const btn = document.getElementById('solveBtn');
+
+        if (!problem) {
+            statusEl.textContent = currentLang === 'ar'
+                ? '✍️ اكتب مشكلتك أولاً قبل التحليل.'
+                : '✍️ Please write your problem first.';
+            statusEl.className = 'solve-status error';
+            return;
+        }
+
+        btn.classList.add('loading');
+        btn.textContent = currentLang === 'ar' ? '⏳ جاري التحليل وبناء الخطة...' : '⏳ Analyzing & building plan...';
+        statusEl.textContent = currentLang === 'ar'
+            ? '🔬 يسمع → يحلل → يحدد السبب → يقترح → يخطط...'
+            : '🔬 Listening → Analyzing → Root cause → Solutions → Plan...';
+        statusEl.className = 'solve-status';
+
+        playRobotBeep(1400, 0.06, 'square', 0.05);
+        setTimeout(() => playRobotBeep(1000, 0.06, 'square', 0.05), 120);
+        setTimeout(() => playRobotBeep(1600, 0.06, 'sawtooth', 0.05), 260);
+
+        try {
+            const res = await fetch('/api/solve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ problem, lang: currentLang })
+            });
+            const data = await res.json();
+
+            if (data.error) {
+                statusEl.textContent = '❌ ' + (data.error_ar || data.error);
+                statusEl.className = 'solve-status error';
+                btn.classList.remove('loading');
+                btn.textContent = translations[currentLang].solveBtn;
+                return;
+            }
+
+            lastSolution = data;
+            renderSolution(data);
+            statusEl.textContent = currentLang === 'ar'
+                ? '✅ تم بناء خطة العمل. يمكنك سماع الملخص أو متابعة التنفيذ.'
+                : '✅ Plan is ready. You can listen to summary or proceed.';
+            statusEl.className = 'solve-status done';
+
+            // ملخص صوتي تلقائي
+            speakSolutionSummary();
+
+        } catch (e) {
+            statusEl.textContent = '❌ ' + (currentLang === 'ar'
+                ? 'تعذر الاتصال بالخادم، حاول مجدداً.'
+                : 'Server connection failed, try again.');
+            statusEl.className = 'solve-status error';
+        } finally {
+            btn.classList.remove('loading');
+            btn.textContent = translations[currentLang].solveBtn;
+        }
+    }
+
+    function renderSolution(data) {
+        const t = translations[currentLang];
+        document.getElementById('solveResult').classList.add('visible');
+
+        document.getElementById('titleCause').textContent   = t.titleCause;
+        document.getElementById('titleSolutions').textContent = t.titleSolutions;
+        document.getElementById('titlePlan').textContent    = t.titlePlan;
+        document.getElementById('titleKpis').textContent    = t.titleKpis;
+        document.getElementById('titleFallback').textContent = t.titleFallback;
+
+        document.getElementById('causeText').textContent = data.cause;
+
+        const solutionsList = document.getElementById('solutionsList');
+        solutionsList.innerHTML = '';
+        (data.solutions || []).forEach(s => {
+            const li = document.createElement('li');
+            li.textContent = s;
+            solutionsList.appendChild(li);
+        });
+
+        const planList = document.getElementById('planList');
+        planList.innerHTML = '';
+        (data.plan || []).forEach(p => {
+            const row = document.createElement('div');
+            row.className = 'plan-step';
+            const lbl = document.createElement('div');
+            lbl.className = 'plan-step-label';
+            lbl.textContent = p.step;
+            const tsk = document.createElement('div');
+            tsk.className = 'plan-step-task';
+            tsk.textContent = p.task;
+            row.appendChild(lbl);
+            row.appendChild(tsk);
+            planList.appendChild(row);
+        });
+
+        const kpisList = document.getElementById('kpisList');
+        kpisList.innerHTML = '';
+        (data.kpis || []).forEach(k => {
+            const li = document.createElement('li');
+            li.textContent = k;
+            kpisList.appendChild(li);
+        });
+
+        document.getElementById('fallbackText').textContent = data.fallback;
+    }
+
+    function speakSolutionSummary() {
+        if (!lastSolution) {
+            speak(currentLang === 'ar'
+                ? 'لا توجد خطة حالياً. اكتب مشكلتك أولاً.'
+                : 'No plan yet. Please write your problem first.');
+            return;
+        }
+        // الملخص الصوتي دائماً بالإنجليزية كما هو محرك الروبوت الحالي
+        const d = lastSolution;
+        const enCause = d.cause;
+        const enSummary = `Problem analysis complete. Root cause identified: ${enCause}. ` +
+            `I generated ${d.solutions.length} solutions and a plan of ${d.plan.length} steps. ` +
+            `Key performance indicators: ${d.kpis.join(', ')}. ` +
+            `If the plan fails, fallback strategy: ${d.fallback}`;
+        speak(enSummary);
+    }
+
+    /* ============================================================
        🔒 Wake Lock — الشاشة لا تنطفئ
     ============================================================ */
     async function acquireWakeLock() {
@@ -1552,7 +2100,15 @@ HTML_TEMPLATE = """
             ],
             navs: ["محادثة ذكية", "ترجمة فورية", "مساعد شخصي", "بحث ذكي", "معلومات عامة", "إعدادات"],
             footer: "C ROBOT AI V6 – Modern Tech Edition",
-            speechWelcome: "Hello, I am C ROBOT AI. The real talking AI robot. Systems online. Ready to assist you now."
+            speechWelcome: "Hello, I am C ROBOT AI. The real talking AI robot. Systems online. Ready to assist you now.",
+            solverTitle: "حلّال المشكلات العملية",
+            problemPlaceholder: "اكتب مشكلتك الحقيقية… مثال: عندي محل ولا أملك زبائن كفاية.",
+            solveBtn: "🧠 حلّل المشكلة وابنِ خطة عمل",
+            titleCause: "🔍 السبب الجذري",
+            titleSolutions: "🧠 الحلول المقترحة",
+            titlePlan: "📋 خطة العمل",
+            titleKpis: "📊 مؤشرات القياس",
+            titleFallback: "🔄 خطة بديلة عند الفشل"
         },
         en: {
             sub: "The Real Talking AI Robot",
@@ -1569,7 +2125,15 @@ HTML_TEMPLATE = """
             ],
             navs: ["Smart Chat", "Translate", "Assistant", "Smart Search", "Knowledge", "Settings"],
             footer: "C ROBOT AI V6 – Modern Tech Edition",
-            speechWelcome: "Hello, I am C ROBOT AI. The real talking AI robot. Systems online. Ready to assist you now."
+            speechWelcome: "Hello, I am C ROBOT AI. The real talking AI robot. Systems online. Ready to assist you now.",
+            solverTitle: "Practical Problem Solver",
+            problemPlaceholder: "Write your real problem… e.g. I have a shop with not enough customers.",
+            solveBtn: "🧠 Analyze & Build Action Plan",
+            titleCause: "🔍 Root Cause",
+            titleSolutions: "🧠 Suggested Solutions",
+            titlePlan: "📋 Action Plan",
+            titleKpis: "📊 KPIs",
+            titleFallback: "🔄 Fallback Strategy"
         }
     };
 
@@ -1610,6 +2174,16 @@ HTML_TEMPLATE = """
             document.getElementById('nav' + i).innerText = t.navs[i - 1];
         }
         document.getElementById('footerText').innerText = t.footer;
+
+        // Solver panel translations
+        document.getElementById('solverTitle').innerText = t.solverTitle;
+        document.getElementById('problemInput').placeholder = t.problemPlaceholder;
+        document.getElementById('solveBtn').innerText = t.solveBtn;
+        document.getElementById('titleCause').innerText = t.titleCause;
+        document.getElementById('titleSolutions').innerText = t.titleSolutions;
+        document.getElementById('titlePlan').innerText = t.titlePlan;
+        document.getElementById('titleKpis').innerText = t.titleKpis;
+        document.getElementById('titleFallback').innerText = t.titleFallback;
 
         speak(t.speechWelcome);
     }
@@ -1720,6 +2294,7 @@ HTML_TEMPLATE = """
 
     console.log('%c🤖 C ROBOT AI V6 – Modern Tech Edition','color:#0ea5e9;font-size:16px;font-weight:bold;');
     console.log('%c✨ Speech Recognition · PWA · Wake Lock · Battery · Network','color:#a855f7;font-size:11px;');
+    console.log('%c🧠 Practical Problem Solver Engine — Active','color:#ec4899;font-size:11px;font-weight:bold;');
 </script>
 </body>
 </html>

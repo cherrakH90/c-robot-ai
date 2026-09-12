@@ -3,6 +3,24 @@ import signal
 import subprocess
 
 PORT = 9000
+IS_VERCEL = os.environ.get('VERCEL') == '1'
+
+# تجاهل أمر lsof على Vercel تماماً
+if not IS_VERCEL:
+    try:
+        command = f"lsof -t -i:{PORT}"
+        pid = subprocess.check_output(
+            command, shell=True, timeout=2, stderr=subprocess.DEVNULL
+        ).decode().strip()
+        if pid:
+            os.kill(int(pid), signal.SIGKILL)
+            print(f"تم إيقاف الخادم القديم على المنفذ {PORT} بنجاح.")
+    except Exception:
+        passimport os
+import signal
+import subprocess
+
+PORT = 9000
 
 try:
     command = f"lsof -t -i:{PORT}"

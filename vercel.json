@@ -6,43 +6,21 @@
       "src": "app.py",
       "use": "@vercel/python",
       "config": {
-        "maxLambdaSize": "50mb",
-        "runtime": "python3.12"
+        "maxLambdaSize": "50mb"
       }
     }
   ],
   "routes": [
     {
-      "src": "/Bg_(\\d+)\\.jpg",
-      "dest": "/app.py"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/app.py"
+      "dest": "app.py"
     }
   ],
   "functions": {
     "app.py": {
-      "runtime": "python3.12",
       "memory": 1024,
       "maxDuration": 10
     }
   },
-  "regions": ["fra1"],
-  "headers": [
-    {
-      "source": "/Bg_(\\d+)\\.jpg",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
-      ]
-    }
-  ]
+  "regions": ["fra1"]
 }
